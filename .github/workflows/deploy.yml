@@ -19,11 +19,14 @@ jobs:
     if: ${{ inputs.service == 'litellm-proxy' || inputs.service == 'all' }}
     steps:
       - uses: actions/checkout@v4
-      - uses: zeabur/action@v0.0.15
+      - uses: actions/setup-node@v4
         with:
-          service-name: litellm-proxy
-          working-directory: litellm-proxy/
-          token: ${{ secrets.ZEABUR_TOKEN }}
+          node-version: "20"
+      - name: Authenticate Zeabur
+        run: npx zeabur auth login --token ${{ secrets.ZEABUR_TOKEN }} --no-interactive
+      - name: Deploy litellm-proxy
+        run: npx zeabur deploy --name litellm-proxy --no-interactive
+        working-directory: litellm-proxy/
 
   deploy-browser-agent:
     name: "Deploy Task 3 — browser-agent"
@@ -31,8 +34,11 @@ jobs:
     if: ${{ inputs.service == 'browser-agent' || inputs.service == 'all' }}
     steps:
       - uses: actions/checkout@v4
-      - uses: zeabur/action@v0.0.15
+      - uses: actions/setup-node@v4
         with:
-          service-name: browser-agent
-          working-directory: browser-agent/
-          token: ${{ secrets.ZEABUR_TOKEN }}
+          node-version: "20"
+      - name: Authenticate Zeabur
+        run: npx zeabur auth login --token ${{ secrets.ZEABUR_TOKEN }} --no-interactive
+      - name: Deploy browser-agent
+        run: npx zeabur deploy --name browser-agent --no-interactive
+        working-directory: browser-agent/
