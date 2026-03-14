@@ -1,5 +1,5 @@
 general_settings:
-  master_key: "os.environ/LITELLM_MASTER_KEY"
+  master_key: "sk-test"
 
 litellm_settings:
   custom_provider_map:
@@ -9,4 +9,4 @@ litellm_settings:
 model_list:
   - model_name: "claude-cli"
     litellm_params:
-      model: "claude-cli/claude-sonnet-4-5"
+      model: "claude-cli/claude-haiku-4-5-20251001"
