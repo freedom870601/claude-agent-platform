@@ -1,0 +1,54 @@
+name: Test
+
+on:
+  push:
+    branches: ["**"]
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: "Branch to test (informational)"
+        required: false
+        default: "main"
+
+jobs:
+  test-litellm-proxy:
+    name: "Task 1 — litellm-proxy"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install uv
+      - run: uv sync
+        working-directory: litellm-proxy
+      - run: uv run python -m pytest tests/ -v -m "not integration"
+        working-directory: litellm-proxy
+
+  test-browser-agent:
+    name: "Task 3 — browser-agent"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install uv
+      - run: uv sync
+        working-directory: browser-agent
+      - run: uv run python -m pytest tests/ -v -m "not integration"
+        working-directory: browser-agent
+
+  test-github-skills:
+    name: "Task 2 — github-skills"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install uv
+      - run: uv sync
+        working-directory: github-skills
+      - run: uv run python -m pytest tests/ -v
+        working-directory: github-skills
