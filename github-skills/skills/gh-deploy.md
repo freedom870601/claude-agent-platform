@@ -6,6 +6,7 @@ inputs:
   - repo: "owner/name format"
   - branch: "branch to deploy (default: main)"
   - environment: "deployment target environment (e.g. production, staging)"
+  - service: "service to deploy: litellm-proxy | browser-agent | all (default: all)"
 outputs:
   - conclusion: "success | failure"
   - run_url: "link to workflow run logs"
@@ -19,12 +20,13 @@ When the user invokes `/gh-deploy`, ask for:
 - `repo` — repository in `owner/name` format (required)
 - `branch` — branch to deploy (default: `main`)
 - `environment` — target environment (e.g. `production`, `staging`)
+- `service` — which service to deploy: `litellm-proxy`, `browser-agent`, or `all` (default: `all`)
 
 ## Steps
 
 1. **CONFIRM gate** — Before running anything, display:
    ```
-   You are about to deploy branch '<branch>' to '<environment>' in repo '<repo>'.
+   You are about to deploy service '<service>' on branch '<branch>' to '<environment>' in repo '<repo>'.
    Type CONFIRM to proceed, or anything else to cancel.
    ```
    Wait for user input. Only proceed if the user types exactly `CONFIRM`. Otherwise abort.
@@ -33,7 +35,7 @@ When the user invokes `/gh-deploy`, ask for:
 
 3. Trigger the workflow:
    ```bash
-   gh workflow run deploy.yml --repo <repo> --ref <branch> -f environment=<environment>
+   gh workflow run deploy.yml --repo <repo> --ref <branch> -f environment=<environment> -f service=<service>
    ```
 
 4. Fetch the latest run:
