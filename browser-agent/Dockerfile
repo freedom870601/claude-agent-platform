@@ -5,8 +5,8 @@ COPY pyproject.toml .
 RUN uv pip install --system fastapi "uvicorn[standard]" openai playwright pydantic
 RUN playwright install chromium --with-deps
 COPY app/ ./app/
-EXPOSE 8000
+EXPOSE 8080
 ENV LITELLM_URL=""
 ENV LITELLM_MASTER_KEY=""
 ENV LITELLM_MODEL="claude-cli"
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8080"]
