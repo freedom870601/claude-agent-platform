@@ -25,7 +25,7 @@ jobs:
       - name: Authenticate Zeabur
         run: npx zeabur auth login --token ${{ secrets.ZEABUR_TOKEN }}
       - name: Deploy litellm-proxy
-        run: npx zeabur deploy --name litellm-proxy --project-id 692ee426ae1be67de63ba78f --interactive=false
+        run: npx zeabur deploy --name litellm-proxy --project-id 69b56d73d1eb012bec9fe7e8 --service-id 69b56de375c26871ff4c5b76 --interactive=false
         working-directory: litellm-proxy/
 
   deploy-browser-agent:
@@ -40,5 +40,5 @@ jobs:
       - name: Authenticate Zeabur
         run: npx zeabur auth login --token ${{ secrets.ZEABUR_TOKEN }}
       - name: Deploy browser-agent
-        run: npx zeabur deploy --name browser-agent --project-id 69b56d73d1eb012bec9fe7e8 --interactive=false
+        run: npx zeabur deploy --name browser-agent --project-id 69b56d73d1eb012bec9fe7e8 --service-id 69b56d8575c26871ff4c5b48 --interactive=false
         working-directory: browser-agent/
