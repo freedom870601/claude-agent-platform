@@ -1,0 +1,12 @@
+kind: Zeabur
+spec:
+  ports:
+    - port: 8000
+      type: HTTP
+  env:
+    - key: LITELLM_URL
+      value: ""
+    - key: LITELLM_MASTER_KEY
+      value: ""
+    - key: LITELLM_MODEL
+      value: "claude-cli"

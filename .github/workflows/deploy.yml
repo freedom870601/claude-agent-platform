@@ -1,0 +1,19 @@
+name: Deploy Task3 to Zeabur
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Deployment target environment'
+        required: true
+        default: 'production'
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Deploy to Zeabur
+        uses: zeabur/action@v1
+        with:
+          service-name: browser-agent
+          working-directory: browser-agent/
+          token: ${{ secrets.ZEABUR_TOKEN }}
