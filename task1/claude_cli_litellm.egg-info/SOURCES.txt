@@ -1,0 +1,6 @@
+pyproject.toml
+claude_cli_litellm.egg-info/PKG-INFO
+claude_cli_litellm.egg-info/SOURCES.txt
+claude_cli_litellm.egg-info/dependency_links.txt
+claude_cli_litellm.egg-info/requires.txt
+claude_cli_litellm.egg-info/top_level.txt
