@@ -2,7 +2,7 @@ import os
 from openai import OpenAI
 
 TOOLS = [
-    {"type": "function", "function": {"name": "search", "description": "Search the web", "parameters": {"type": "object", "properties": {"query": {"type": "string"}}, "required": ["query"]}}},
+    {"type": "function", "function": {"name": "browser_search", "description": "Search the web using a browser", "parameters": {"type": "object", "properties": {"query": {"type": "string"}}, "required": ["query"]}}},
     {"type": "function", "function": {"name": "navigate", "description": "Navigate to URL", "parameters": {"type": "object", "properties": {"url": {"type": "string"}}, "required": ["url"]}}},
     {"type": "function", "function": {"name": "extract_text", "description": "Get visible text from current page", "parameters": {"type": "object", "properties": {}}}},
     {"type": "function", "function": {"name": "click", "description": "Click an element", "parameters": {"type": "object", "properties": {"selector": {"type": "string"}}, "required": ["selector"]}}},

@@ -52,7 +52,7 @@ def test_step_calls_openai():
 def test_tools_list_has_expected_tools():
     from app.claude_client import TOOLS
     names = [t["function"]["name"] for t in TOOLS]
-    assert "search" in names
+    assert "browser_search" in names
     assert "navigate" in names
     assert "extract_text" in names
     assert "click" in names

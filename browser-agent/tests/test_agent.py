@@ -53,7 +53,7 @@ async def test_agent_done_tool_terminates():
 async def test_agent_max_steps_reached():
     from app.schemas import RunTaskRequest
 
-    search_tc = make_tool_call("search", {"query": "python"})
+    search_tc = make_tool_call("browser_search", {"query": "python"})
     msg = make_message(tool_calls=[search_tc])
     resp = make_response(msg)
 
@@ -80,7 +80,7 @@ async def test_agent_max_steps_reached():
 async def test_agent_browser_error_recovery():
     from app.schemas import RunTaskRequest
 
-    search_tc = make_tool_call("search", {"query": "python"}, "call_1")
+    search_tc = make_tool_call("browser_search", {"query": "python"}, "call_1")
     done_tc = make_tool_call("done", {"answer": "recovered"}, "call_2")
 
     msg1 = make_message(tool_calls=[search_tc])
@@ -114,5 +114,5 @@ async def test_agent_browser_error_recovery():
 
         assert result.status == "completed"
         # Error was returned to Claude, not propagated up
-        error_log = next(l for l in result.logs if l.action == "search")
+        error_log = next(l for l in result.logs if l.action == "browser_search")
         assert "Error" in error_log.output

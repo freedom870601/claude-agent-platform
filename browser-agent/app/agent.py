@@ -48,7 +48,7 @@ async def run_agent(request: RunTaskRequest) -> RunTaskResponse:
                         final_answer = args["answer"]
                         all_done = True
                         result_str = final_answer
-                    elif fn == "search":
+                    elif fn == "browser_search":
                         result_str = await browser.search(args["query"])
                     elif fn == "navigate":
                         result_str = await browser.navigate(args["url"])
