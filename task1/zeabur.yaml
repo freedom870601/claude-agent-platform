@@ -1,0 +1,12 @@
+kind: Zeabur
+spec:
+  ports:
+    - port: 4000
+      type: HTTP
+  env:
+    - key: LITELLM_MASTER_KEY
+      value: ""
+    - key: ANTHROPIC_API_KEY
+      value: ""
+    - key: CLAUDE_PATH
+      value: "claude"
