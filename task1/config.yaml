@@ -1,1 +1,12 @@
-# LiteLLM proxy config - will be filled in Phase 7
+general_settings:
+  master_key: "os.environ/LITELLM_MASTER_KEY"
+
+litellm_settings:
+  custom_provider_map:
+    - {"provider": "claude-cli", "custom_handler": "custom_handler.claude_cli_provider"}
+  drop_params: true
+
+model_list:
+  - model_name: "claude-cli"
+    litellm_params:
+      model: "claude-cli/claude-sonnet-4-5"
