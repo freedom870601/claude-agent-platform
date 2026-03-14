@@ -2,6 +2,16 @@
 
 Three advanced tasks demonstrating AI-assisted development with full TDD workflow, deployed online.
 
+## Completion Status (as of 2026-03-14)
+
+| Task | Folder | Status | Unit Tests | Integration Tests | Deploy |
+|------|--------|--------|-----------|-------------------|--------|
+| 1 | `litellm-proxy/` | ✅ Complete | 23 passing | 5 (marked, require running service) | Zeabur (port 8080) |
+| 2 | `github-skills/` | ✅ Complete | 11 passing | — | Local skill files |
+| 3 | `browser-agent/` | ✅ Complete | 26 passing | 1 (marked, requires litellm-proxy) | Zeabur (port 8080) |
+
+**Total: 60 unit tests passing across all tasks. All CI checks green.**
+
 ## Tasks
 
 | Task | Folder | Description | Deploy |
@@ -39,21 +49,34 @@ Three GitHub Actions workflows back the Task 2 skills:
 
 ### Install Skills
 
+In this repo, `.claude/commands/` is a symlink to `github-skills/skills/` — no copying needed. Skills and slash commands stay in sync automatically.
+
+For other repos, symlink or curl:
+
 ```bash
-mkdir -p ~/.claude/skills
-REPO="https://raw.githubusercontent.com/laiyanru/claude-agent-platform/main"
+# Symlink (recommended)
+ln -s /path/to/claude-agent-platform/github-skills/skills .claude/commands
+
+# Or curl individual files
+REPO="https://raw.githubusercontent.com/freedom870601/claude-agent-platform/main"
+mkdir -p .claude/commands
 for skill in gh-lint gh-test gh-deploy gh-status; do
-  curl "$REPO/github-skills/skills/${skill}.md" -o ~/.claude/skills/${skill}.md
+  curl "$REPO/github-skills/skills/${skill}.md" -o .claude/commands/${skill}.md
 done
 ```
 
 ### Example Commands
 
+`/gh-deploy` auto-detects `repo` (from `git remote`) and `service` (from changed files):
+
 ```
-/gh-status repo: laiyanru/claude-agent-platform
-/gh-test   repo: laiyanru/claude-agent-platform
-/gh-lint   repo: laiyanru/claude-agent-platform
-/gh-deploy repo: laiyanru/claude-agent-platform  service: litellm-proxy  environment: production
+/gh-status
+/gh-test
+/gh-lint
+/gh-deploy environment: production
+
+# Override explicitly if needed
+/gh-deploy repo: freedom870601/claude-agent-platform  service: litellm-proxy  environment: production
 ```
 
 ### Required GitHub Secrets

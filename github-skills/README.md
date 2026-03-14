@@ -13,28 +13,30 @@ Packages four GitHub Actions workflows as reusable Claude Code Skills backed by 
 
 ## Installation
 
-Copy skill files from this repo into your Claude skills directory:
+### In this repo (symlink — recommended)
+
+`.claude/commands/` is already a symlink to `github-skills/skills/`, so all skills are available as slash commands with no copying needed:
 
 ```bash
-mkdir -p ~/.claude/skills
-cp github-skills/skills/gh-lint.md ~/.claude/skills/
+ls -la .claude/commands
+# .claude/commands -> ../github-skills/skills
 ```
 
-Install all skills at once:
+Edit files under `github-skills/skills/` and changes are instantly reflected in Claude Code.
+
+### In another repo (symlink)
 
 ```bash
-mkdir -p ~/.claude/skills
-for skill in gh-lint gh-test gh-deploy gh-status; do
-  cp github-skills/skills/${skill}.md ~/.claude/skills/
-done
+ln -s /path/to/claude-agent-platform/github-skills/skills .claude/commands
 ```
 
-Or from a published GitHub repo:
+### From a published GitHub repo (curl)
 
 ```bash
-REPO="https://raw.githubusercontent.com/laiyanru/claude-agent-platform/main"
+REPO="https://raw.githubusercontent.com/freedom870601/claude-agent-platform/main"
+mkdir -p .claude/commands
 for skill in gh-lint gh-test gh-deploy gh-status; do
-  curl "$REPO/github-skills/skills/${skill}.md" -o ~/.claude/skills/${skill}.md
+  curl "$REPO/github-skills/skills/${skill}.md" -o .claude/commands/${skill}.md
 done
 ```
 
@@ -66,7 +68,7 @@ uv run pytest tests/ -v
 
 ## This Repo as a Live Example
 
-`laiyanru/claude-agent-platform` uses these skills against itself. Every push
+`freedom870601/claude-agent-platform` uses these skills against itself. Every push
 triggers `test.yml` and `lint.yml`, providing real CI run logs as verifiable output.
 
 ### Workflow → Skill mapping
@@ -81,16 +83,19 @@ triggers `test.yml` and `lint.yml`, providing real CI run logs as verifiable out
 
 ```
 # 1. Check recent runs
-/gh-status repo: laiyanru/claude-agent-platform
+/gh-status repo: freedom870601/claude-agent-platform
 
 # 2. Trigger tests on current branch
-/gh-test repo: laiyanru/claude-agent-platform
+/gh-test repo: freedom870601/claude-agent-platform
 
 # 3. Trigger lint
-/gh-lint repo: laiyanru/claude-agent-platform
+/gh-lint repo: freedom870601/claude-agent-platform
 
-# 4. Deploy a specific service (CONFIRM gate required)
-/gh-deploy repo: laiyanru/claude-agent-platform  service: litellm-proxy  environment: production
+# 4. Deploy — repo and service are auto-detected from git remote + changed files
+/gh-deploy environment: production
+
+# 4b. Override explicitly if needed
+/gh-deploy repo: freedom870601/claude-agent-platform  service: litellm-proxy  environment: production
 ```
 
 ## Example: `/gh-status`

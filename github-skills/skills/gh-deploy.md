@@ -16,11 +16,33 @@ Trigger the deploy workflow with a mandatory confirmation step.
 
 ## Usage
 
-When the user invokes `/gh-deploy`, ask for:
-- `repo` — repository in `owner/name` format (required)
+When the user invokes `/gh-deploy`:
+
+### Auto-detect `repo`
+If `repo` was not supplied, run:
+```bash
+git remote get-url origin
+```
+Parse `owner/name` from the output:
+- HTTPS: `https://github.com/owner/name.git` → `owner/name`
+- SSH: `git@github.com:owner/name.git` → `owner/name`
+
+### Auto-detect `service`
+If `service` was not supplied, run:
+```bash
+git diff --name-only HEAD~1
+```
+Map changed paths to a service:
+- Any path starting with `litellm-proxy/` → `litellm-proxy`
+- Any path starting with `browser-agent/` → `browser-agent`
+- Paths in both folders → `all`
+- Neither folder changed → `all`
+
+### Optional inputs (ask only if not auto-detected or not provided)
 - `branch` — branch to deploy (default: `main`)
 - `environment` — target environment (e.g. `production`, `staging`)
-- `service` — which service to deploy: `litellm-proxy`, `browser-agent`, or `all` (default: `all`)
+
+Show the detected/resolved values to the user before proceeding to the CONFIRM gate.
 
 ## Steps
 
