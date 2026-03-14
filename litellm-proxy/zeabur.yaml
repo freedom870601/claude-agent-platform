@@ -3,7 +3,7 @@ spec:
   build:
     type: docker
   ports:
-    - port: 4000
+    - port: 8080
       type: HTTP
   env:
     - key: LITELLM_MASTER_KEY

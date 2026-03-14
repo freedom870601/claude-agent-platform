@@ -14,6 +14,6 @@ COPY pyproject.toml .
 RUN uv pip install --system "litellm[proxy]>=1.40" "python-dotenv>=1.0"
 COPY custom_handler.py config.yaml ./
 
-EXPOSE 4000
+EXPOSE 8080
 ENV CLAUDE_PATH=claude
-CMD ["litellm", "--config", "config.yaml", "--host", "0.0.0.0", "--port", "4000"]
+CMD ["litellm", "--config", "config.yaml", "--host", "0.0.0.0", "--port", "8080"]
