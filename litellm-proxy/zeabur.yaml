@@ -1,5 +1,7 @@
 kind: Zeabur
 spec:
+  build:
+    type: docker
   ports:
     - port: 4000
       type: HTTP
