@@ -1,18 +1,37 @@
-name: Deploy Task3 to Zeabur
+name: Deploy to Zeabur
+
 on:
   workflow_dispatch:
     inputs:
       environment:
-        description: 'Deployment target environment'
+        description: "Deployment target (production | staging)"
         required: true
-        default: 'production'
+        default: "production"
+      service:
+        description: "Service to deploy: litellm-proxy | browser-agent | all"
+        required: true
+        default: "all"
+
 jobs:
-  deploy:
+  deploy-litellm-proxy:
+    name: "Deploy Task 1 — litellm-proxy"
     runs-on: ubuntu-latest
+    if: ${{ inputs.service == 'litellm-proxy' || inputs.service == 'all' }}
     steps:
       - uses: actions/checkout@v4
-      - name: Deploy to Zeabur
-        uses: zeabur/action@v1
+      - uses: zeabur/action@v1
+        with:
+          service-name: litellm-proxy
+          working-directory: litellm-proxy/
+          token: ${{ secrets.ZEABUR_TOKEN }}
+
+  deploy-browser-agent:
+    name: "Deploy Task 3 — browser-agent"
+    runs-on: ubuntu-latest
+    if: ${{ inputs.service == 'browser-agent' || inputs.service == 'all' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: zeabur/action@v1
         with:
           service-name: browser-agent
           working-directory: browser-agent/
