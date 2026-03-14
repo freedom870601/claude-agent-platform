@@ -19,7 +19,7 @@ jobs:
     if: ${{ inputs.service == 'litellm-proxy' || inputs.service == 'all' }}
     steps:
       - uses: actions/checkout@v4
-      - uses: zeabur/action@v1
+      - uses: zeabur/action@v0.0.15
         with:
           service-name: litellm-proxy
           working-directory: litellm-proxy/
@@ -31,7 +31,7 @@ jobs:
     if: ${{ inputs.service == 'browser-agent' || inputs.service == 'all' }}
     steps:
       - uses: actions/checkout@v4
-      - uses: zeabur/action@v1
+      - uses: zeabur/action@v0.0.15
         with:
           service-name: browser-agent
           working-directory: browser-agent/
