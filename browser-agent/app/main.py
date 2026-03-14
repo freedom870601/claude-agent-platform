@@ -4,6 +4,10 @@ from .agent import run_agent
 
 app = FastAPI(title="Browser Agent")
 
+@app.get("/")
+def root():
+    return {"status": "ok", "service": "browser-agent"}
+
 @app.get("/health")
 def health():
     return {"status": "ok", "service": "browser-agent"}
