@@ -64,6 +64,35 @@ uv sync --extra dev
 uv run pytest tests/ -v
 ```
 
+## This Repo as a Live Example
+
+`laiyanru/claude-agent-platform` uses these skills against itself. Every push
+triggers `test.yml` and `lint.yml`, providing real CI run logs as verifiable output.
+
+### Workflow → Skill mapping
+
+| Workflow file | Skill | Notes |
+|---------------|-------|-------|
+| `test.yml` | `/gh-test` | Runs unit tests for all three tasks |
+| `lint.yml` | `/gh-lint` | Ruff check across all task folders |
+| `deploy.yml` | `/gh-deploy` | Manual dispatch; `service` input selects target |
+
+### Full demo flow
+
+```
+# 1. Check recent runs
+/gh-status repo: laiyanru/claude-agent-platform
+
+# 2. Trigger tests on current branch
+/gh-test repo: laiyanru/claude-agent-platform
+
+# 3. Trigger lint
+/gh-lint repo: laiyanru/claude-agent-platform
+
+# 4. Deploy a specific service (CONFIRM gate required)
+/gh-deploy repo: laiyanru/claude-agent-platform  service: litellm-proxy  environment: production
+```
+
 ## Example: `/gh-status`
 
 ```

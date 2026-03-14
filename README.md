@@ -27,6 +27,41 @@ cd browser-agent && uv run uvicorn app.main:app --reload
 
 See each subfolder's `README.md` for full setup, usage, and deployment instructions.
 
+## CI/CD via GitHub Skills
+
+Three GitHub Actions workflows back the Task 2 skills:
+
+| Workflow | File | Trigger | Skills |
+|----------|------|---------|--------|
+| Test | `.github/workflows/test.yml` | Every push + `workflow_dispatch` | `/gh-test` |
+| Lint | `.github/workflows/lint.yml` | Every push + `workflow_dispatch` | `/gh-lint` |
+| Deploy | `.github/workflows/deploy.yml` | `workflow_dispatch` only | `/gh-deploy` |
+
+### Install Skills
+
+```bash
+mkdir -p ~/.claude/skills
+REPO="https://raw.githubusercontent.com/laiyanru/claude-agent-platform/main"
+for skill in gh-lint gh-test gh-deploy gh-status; do
+  curl "$REPO/github-skills/skills/${skill}.md" -o ~/.claude/skills/${skill}.md
+done
+```
+
+### Example Commands
+
+```
+/gh-status repo: laiyanru/claude-agent-platform
+/gh-test   repo: laiyanru/claude-agent-platform
+/gh-lint   repo: laiyanru/claude-agent-platform
+/gh-deploy repo: laiyanru/claude-agent-platform  service: litellm-proxy  environment: production
+```
+
+### Required GitHub Secrets
+
+| Secret | Purpose |
+|--------|---------|
+| `ZEABUR_TOKEN` | Zeabur deploy token (set in repo Settings → Secrets) |
+
 ## AI Workflow
 
 All tasks were built with Claude Code using:
