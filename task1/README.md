@@ -18,22 +18,31 @@ cp .env.example .env  # fill in values
 
 ## Run Proxy
 
+**Locally:**
+
 ```bash
-source .env  # or export vars manually
 uv run litellm --config config.yaml
 ```
 
+**Via Docker (recommended):**
+
+```bash
+docker build -t vici-task1 .
+docker run -d --rm -p 4000:4000 --env-file .env vici-task1
+```
+
 The proxy starts at `http://localhost:4000`.
+
+> **Note:** When running via Docker, always use `--env-file .env` to pass `ANTHROPIC_API_KEY`. The container's Claude CLI reads it from the environment.
 
 ## Run Tests
 
 ```bash
 # Unit tests (no proxy needed, ~2s)
-uv run pytest tests/test_assemble_prompt.py tests/test_build_cmd.py \
-              tests/test_acompletion.py tests/test_astreaming.py -v
+uv run python -m pytest tests/ -v -m "not integration"
 
-# Integration tests (proxy must be running)
-uv run pytest tests/test_proxy.py -m integration -v
+# Integration tests (proxy must be running on localhost:4000)
+uv run python -m pytest tests/test_proxy.py -v
 ```
 
 ## Usage
@@ -82,7 +91,8 @@ model_list:
 - Claude CLI auth uses `ANTHROPIC_API_KEY` environment variable
 - Model names are passed as `claude-cli/<model>` (provider prefix stripped before invoking CLI)
 - Timeout for CLI calls: 120 seconds
+- `_SUBPROCESS_ENV` must be `dict(os.environ)` — uvloop (used inside the Docker container) rejects `os.environ` directly as it expects a plain `dict`
 
 ## AI Workflow Notes
 
-Built entirely with Claude Code using the writing-plans skill for architecture, then executing the plan task-by-task with full TDD workflow (red → green cycles evidenced in git history).
+Built entirely with Claude Code using the writing-plans skill for architecture, then executing the plan task-by-task with full TDD workflow (red → green cycles evidenced in git history).                      

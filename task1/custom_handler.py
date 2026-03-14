@@ -6,15 +6,19 @@ import time
 import uuid
 from typing import AsyncIterator, Optional
 
+from dotenv import load_dotenv
 import litellm
 from litellm import CustomLLM
 from litellm.types.utils import GenericStreamingChunk, ModelResponse, Choices, Message, Usage
 from litellm.llms.custom_llm import CustomLLMError
 
+load_dotenv()
+
 CLAUDE_PATH = os.environ.get("CLAUDE_PATH", "claude")
 
-# Build subprocess env without ANTHROPIC_API_KEY so Claude CLI uses OAuth login
-_SUBPROCESS_ENV = {k: v for k, v in os.environ.items() if k != "ANTHROPIC_API_KEY"}
+# Pass full environment so Claude CLI can use ANTHROPIC_API_KEY
+# Must be a plain dict — uvloop rejects os.environ (_Environ type)
+_SUBPROCESS_ENV = dict(os.environ)
 
 
 def _make_response(text: str, model: str) -> ModelResponse:

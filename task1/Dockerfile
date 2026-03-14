@@ -11,7 +11,7 @@ RUN ln -sf /usr/local/lib/node_modules/@anthropic-ai/claude-code/cli.js /usr/loc
 RUN pip install uv
 WORKDIR /app
 COPY pyproject.toml .
-RUN uv pip install --system "litellm[proxy]>=1.40"
+RUN uv pip install --system "litellm[proxy]>=1.40" "python-dotenv>=1.0"
 COPY custom_handler.py config.yaml ./
 
 EXPOSE 4000

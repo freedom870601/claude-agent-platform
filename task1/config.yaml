@@ -1,5 +1,5 @@
 general_settings:
-  master_key: "sk-test"
+  master_key: "os.environ/LITELLM_MASTER_KEY"
 
 litellm_settings:
   custom_provider_map:
