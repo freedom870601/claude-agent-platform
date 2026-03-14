@@ -1,0 +1,16 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+dist/
+build/
+
+# Environment files
+.env
+
+# Claude Code local settings (contains personal permission allowlists)
+.claude/settings.local.json
+
+# OS
+.DS_Store
