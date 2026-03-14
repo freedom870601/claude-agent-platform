@@ -82,3 +82,14 @@ def test_validate_skill_valid_file():
 def test_validate_skill_invalid_file():
     errors = validate_skill(FIXTURES / "invalid_skill.md")
     assert len(errors) > 0
+
+
+# --- all skill files pass validate_skill ---
+
+def test_all_skills_valid():
+    skills_dir = Path(__file__).parent.parent / "skills"
+    skill_files = list(skills_dir.glob("*.md"))
+    assert len(skill_files) > 0, "No skill files found"
+    for skill_path in skill_files:
+        errors = validate_skill(skill_path)
+        assert errors == [], f"{skill_path.name} has errors: {errors}"
