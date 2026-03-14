@@ -1,4 +1,3 @@
-import pytest
 from app.logger import RunLogger
 
 def test_logger_empty():

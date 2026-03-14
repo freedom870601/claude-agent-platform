@@ -1,4 +1,3 @@
-import pytest
 from unittest.mock import MagicMock, patch
 
 def make_mock_response(content=None, tool_calls=None):
@@ -41,7 +40,7 @@ def test_step_calls_openai():
 
         client = ClaudeClient("http://localhost:4000", "sk-test")
         client.add_user("find python version")
-        resp = client.step()
+        client.step()
 
         mock_client.chat.completions.create.assert_called_once_with(
             model="claude-cli",

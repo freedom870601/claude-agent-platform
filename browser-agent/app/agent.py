@@ -3,7 +3,7 @@ import json
 from .browser import BrowserSession
 from .claude_client import ClaudeClient
 from .logger import RunLogger
-from .schemas import RunTaskRequest, RunTaskResponse, StepLog
+from .schemas import RunTaskRequest, RunTaskResponse
 import os
 
 async def run_agent(request: RunTaskRequest) -> RunTaskResponse:

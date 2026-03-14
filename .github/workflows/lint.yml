@@ -1,0 +1,23 @@
+name: Lint
+
+on:
+  push:
+    branches: ["**"]
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: "Branch to lint (informational)"
+        required: false
+        default: "main"
+
+jobs:
+  lint:
+    name: "Ruff — all tasks"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install ruff
+      - run: ruff check litellm-proxy/ browser-agent/ github-skills/

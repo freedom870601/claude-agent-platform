@@ -38,7 +38,7 @@ async def test_streaming_content_type():
             "stream": True,
         }) as resp:
             assert "text/event-stream" in resp.headers["content-type"]
-            lines = [l async for l in resp.aiter_lines() if l.startswith("data:")]
+            lines = [line async for line in resp.aiter_lines() if line.startswith("data:")]
     assert len(lines) > 0
 
 @pytest.mark.integration

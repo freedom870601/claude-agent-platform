@@ -1,6 +1,4 @@
 """Tests for tool use support in custom_handler."""
-import json
-import pytest
 from custom_handler import assemble_prompt, parse_tool_response, build_tools_system_prompt
 
 

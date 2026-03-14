@@ -114,5 +114,5 @@ async def test_agent_browser_error_recovery():
 
         assert result.status == "completed"
         # Error was returned to Claude, not propagated up
-        error_log = next(l for l in result.logs if l.action == "browser_search")
+        error_log = next(log for log in result.logs if log.action == "browser_search")
         assert "Error" in error_log.output

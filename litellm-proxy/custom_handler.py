@@ -7,7 +7,6 @@ import uuid
 from typing import AsyncIterator, Optional
 
 from dotenv import load_dotenv
-import litellm
 from litellm import CustomLLM
 from litellm.types.utils import GenericStreamingChunk, ModelResponse, Choices, Message, Usage
 from litellm.llms.custom_llm import CustomLLMError
