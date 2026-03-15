@@ -35,3 +35,15 @@ def test_run_task_invalid_request():
 def test_run_task_max_steps_exceeded():
     resp = client.post("/run-task", json={"task": "x", "max_steps": 100})
     assert resp.status_code == 422
+
+def test_cors_headers_on_run_task():
+    """Browser fetch() requires CORS headers — missing middleware causes preflight failure."""
+    resp = client.options(
+        "/run-task",
+        headers={
+            "Origin": "http://localhost:8080",
+            "Access-Control-Request-Method": "POST",
+            "Access-Control-Request-Headers": "content-type",
+        },
+    )
+    assert resp.headers.get("access-control-allow-origin") == "*"
