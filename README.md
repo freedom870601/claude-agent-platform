@@ -2,7 +2,7 @@
 
 Three advanced tasks demonstrating AI-assisted development with full TDD workflow, deployed online.
 
-## Completion Status (as of 2026-03-14)
+## Completion Status (as of 2026-03-15)
 
 | Task | Folder | Status | Unit Tests | Integration Tests | Deploy |
 |------|--------|--------|-----------|-------------------|--------|
@@ -84,6 +84,21 @@ done
 | Secret | Purpose |
 |--------|---------|
 | `ZEABUR_TOKEN` | Zeabur deploy token (set in repo Settings → Secrets) |
+
+## Presentation
+
+A slide deck is included in two formats:
+
+| File | Description |
+|------|-------------|
+| `presentation.html` | Interactive browser slides (dark theme, live demo panels for Task 1 & 3) |
+| `presentation.pptx` | PowerPoint version generated from `generate_pptx.py` |
+
+To regenerate the PPTX:
+
+```bash
+uv run --with python-pptx --python 3.11 python generate_pptx.py
+```
 
 ## AI Workflow
 
