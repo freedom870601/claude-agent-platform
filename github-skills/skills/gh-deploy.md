@@ -6,7 +6,7 @@ inputs:
   - repo: "owner/name format"
   - branch: "branch to deploy (default: main)"
   - environment: "deployment target environment (e.g. production, staging)"
-  - service: "service to deploy: litellm-proxy | browser-agent (required — no default)"
+  - service: "service to deploy: litellm-proxy | browser-agent | all (default: all)"
 outputs:
   - conclusion: "success | failure"
   - run_url: "link to workflow run logs"
@@ -35,12 +35,8 @@ git diff --name-only HEAD~1
 Map changed paths to a service:
 - Any path starting with `litellm-proxy/` only → `litellm-proxy`
 - Any path starting with `browser-agent/` only → `browser-agent`
-- Paths in **both** folders, or **neither** folder changed → ask the user:
-  ```
-  Changed paths touch both services (or neither). Which service do you want to deploy?
-  Enter 'litellm-proxy' or 'browser-agent':
-  ```
-  Wait for the user's answer before continuing.
+- Paths in both folders → `all`
+- Neither folder changed → `all`
 
 ### Optional inputs (ask only if not auto-detected or not provided)
 - `branch` — branch to deploy (default: `main`)
