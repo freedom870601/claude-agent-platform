@@ -6,11 +6,11 @@ Three advanced tasks demonstrating AI-assisted development with full TDD workflo
 
 | Task | Folder | Status | Unit Tests | Integration Tests | Deploy |
 |------|--------|--------|-----------|-------------------|--------|
-| 1 | `litellm-proxy/` | ✅ Complete | 23 passing | 5 (marked, require running service) | Zeabur (port 8080) |
-| 2 | `github-skills/` | ✅ Complete | 11 passing | — | Local skill files |
-| 3 | `browser-agent/` | ✅ Complete | 26 passing | 1 (marked, requires litellm-proxy) | Zeabur (port 8080) |
+| 1 | `litellm-proxy/` | ✅ Complete | 28 passing | 5 (marked, require running service) | Zeabur (port 8080) |
+| 2 | `github-skills/` | ✅ Complete | 13 passing | — | Local skill files |
+| 3 | `browser-agent/` | ✅ Complete | 32 passing | 1 (marked, requires litellm-proxy) | Zeabur (port 8080) |
 
-**Total: 60 unit tests passing across all tasks. All CI checks green.**
+**Total: 73 unit tests passing across all tasks. All CI checks green.**
 
 ## Tasks
 

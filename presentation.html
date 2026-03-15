@@ -3,405 +3,291 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>VICI Take-Home — Demo Presentation</title>
+<title>AI Agent Platform — Take-Home Demo</title>
 <style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+  :root {
+    --bg: #080c10;
+    --surface: #0e1419;
+    --surface2: #141c24;
+    --border: #1e2832;
+    --border2: #243040;
+    --text: #dce8f0;
+    --muted: #607080;
+    --dim: #3a4a5a;
+    --blue: #3d9cf0;
+    --blue-dim: #1a3a5c;
+    --green: #34c974;
+    --green-dim: #0e2e1c;
+    --purple: #a47cff;
+    --purple-dim: #231a40;
+    --orange: #ff9640;
+    --orange-dim: #3a2010;
+    --red: #ff5757;
+    --red-dim: #2e1010;
+  }
+
   * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 100%; height: 100%; overflow: hidden; background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; }
 
-  body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, monospace;
-    background: #0d1117;
-    color: #e6edf3;
-    line-height: 1.6;
-  }
+  #progress-bar { position: fixed; top: 0; left: 0; height: 2px; background: var(--blue); box-shadow: 0 0 8px var(--blue); z-index: 100; transition: width 0.4s cubic-bezier(0.4,0,0.2,1); }
 
-  .slide {
-    min-height: 100vh;
-    padding: 60px 80px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    border-bottom: 1px solid #21262d;
-    max-width: 1100px;
-    margin: 0 auto;
-  }
+  #nav { position: fixed; bottom: 24px; right: 24px; display: flex; align-items: center; gap: 10px; z-index: 100; background: var(--surface); border: 1px solid var(--border2); border-radius: 40px; padding: 7px 14px; }
+  #slide-counter { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--muted); min-width: 38px; text-align: center; }
+  .nav-btn { width: 30px; height: 30px; border-radius: 50%; border: 1px solid var(--border2); background: var(--surface2); color: var(--text); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 13px; transition: all 0.15s; }
+  .nav-btn:hover { background: var(--blue-dim); border-color: var(--blue); color: var(--blue); }
+  .nav-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+  #dots { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); display: flex; gap: 6px; z-index: 100; }
+  .dot { width: 5px; height: 5px; border-radius: 50%; background: var(--dim); cursor: pointer; transition: all 0.3s; }
+  .dot.active { background: var(--blue); width: 18px; border-radius: 3px; box-shadow: 0 0 6px var(--blue); }
+
+  #kb-hint { position: fixed; bottom: 24px; left: 24px; font-size: 11px; color: var(--dim); font-family: 'JetBrains Mono', monospace; z-index: 100; }
+
+  #slides-wrap { width: 100%; height: 100%; position: relative; overflow: hidden; }
+
+  .slide { position: absolute; top: 0; left: 0; width: 100%; height: 100%; padding: 52px 64px 80px; display: flex; flex-direction: column; justify-content: flex-start; opacity: 0; transform: translateX(60px); transition: opacity 0.4s cubic-bezier(0.4,0,0.2,1), transform 0.4s cubic-bezier(0.4,0,0.2,1); pointer-events: none; overflow-y: auto; scroll-behavior: smooth; }
+  .slide.active { opacity: 1; transform: translateX(0); pointer-events: all; }
+  .slide.go-left { opacity: 0; transform: translateX(-60px); }
+  /* slides with little content: vertically center via auto margin trick */
+  .slide-center { justify-content: center; }
+
+  .chip { display: inline-flex; align-items: center; gap: 6px; font-size: 10px; font-weight: 700; font-family: 'JetBrains Mono', monospace; text-transform: uppercase; letter-spacing: 2px; padding: 4px 12px; border-radius: 20px; margin-bottom: 14px; }
+  .cb { background: var(--blue-dim); color: var(--blue); border: 1px solid #1e4878; }
+  .cg { background: var(--green-dim); color: var(--green); border: 1px solid #1a5a38; }
+  .cp { background: var(--purple-dim); color: var(--purple); border: 1px solid #3a2a60; }
+  .co { background: var(--orange-dim); color: var(--orange); border: 1px solid #5a3a18; }
+  .cr { background: var(--red-dim); color: var(--red); border: 1px solid #5a1818; }
+
+  h1 { font-family: 'Syne', sans-serif; font-size: clamp(38px, 5vw, 64px); font-weight: 800; color: #fff; line-height: 1.05; letter-spacing: -1.5px; margin-bottom: 12px; }
+  h2 { font-family: 'Syne', sans-serif; font-size: clamp(24px, 3.2vw, 38px); font-weight: 700; color: #fff; line-height: 1.1; letter-spacing: -0.5px; margin-bottom: 16px; }
+  h3 { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 7px; }
+  p.lead { font-size: 15px; color: var(--muted); line-height: 1.65; max-width: 640px; margin-bottom: 20px; }
+
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px 22px; }
+  .g3 { display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; }
+  .g2 { display: grid; grid-template-columns: repeat(2,1fr); gap: 14px; }
+  .g4 { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; }
+  .tc { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: stretch; }
+
+  ul.b { list-style: none; padding: 0; }
+  ul.b li { font-size: 13px; color: var(--muted); padding: 3px 0 3px 16px; position: relative; line-height: 1.5; }
+  ul.b li::before { content: '›'; position: absolute; left: 0; color: var(--blue); font-size: 14px; }
+
+  pre { background: #050810; border: 1px solid var(--border); border-radius: 10px; padding: 16px 18px; font-size: 11.5px; line-height: 1.75; overflow-x: auto; font-family: 'JetBrains Mono', monospace; }
+  code { font-family: 'JetBrains Mono', monospace; font-size: 12px; }
+  .kw { color: #ff7b72; } .str { color: #79d4ff; } .cm { color: var(--dim); font-style: italic; } .num { color: #79c0ff; }
+
+  .flow { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; margin: 16px 0; }
+  .fbox { background: var(--surface); border: 1px solid var(--border2); border-radius: 8px; padding: 9px 16px; font-size: 12px; font-weight: 600; color: var(--text); text-align: center; line-height: 1.4; }
+  .farr { color: var(--blue); font-size: 16px; font-weight: 700; flex-shrink: 0; }
+
+  .stat-row { display: flex; gap: 12px; margin: 12px 0; flex-wrap: wrap; }
+  .stat { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px 20px; text-align: center; flex: 1; min-width: 80px; }
+  .sn { font-size: 30px; font-weight: 800; font-family: 'Syne', sans-serif; color: var(--blue); display: block; line-height: 1; margin-bottom: 3px; }
+  .sl { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
+
+  .tdd-row { display: flex; gap: 0; margin: 4px 0; }
+  .tc2 { flex: 1; padding: 8px 12px; font-size: 10.5px; border: 1px solid var(--border); border-right: none; font-family: 'JetBrains Mono', monospace; line-height: 1.4; }
+  .tc2:first-child { border-radius: 8px 0 0 8px; }
+  .tc2:last-child { border-right: 1px solid var(--border); border-radius: 0 8px 8px 0; }
+  .tr { background: #1a0505; border-color: var(--red); }
+  .tg { background: var(--green-dim); border-color: var(--green); }
+  .tl { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
+  .tr .tl { color: var(--red); } .tg .tl { color: var(--green); }
+
+  .sk-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
+  .sk-cmd { font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: 700; color: var(--purple); margin-bottom: 6px; }
+  .sk-desc { font-size: 12px; color: var(--muted); margin-bottom: 8px; line-height: 1.5; }
+  .sk-inp { font-size: 10px; color: var(--dim); font-family: 'JetBrains Mono', monospace; }
+
+  .tloop { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px; display: flex; flex-direction: column; gap: 11px; }
+  .tstep { display: flex; align-items: flex-start; gap: 11px; }
+  .snum { width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; flex-shrink: 0; margin-top: 2px; }
+  .su { background: var(--blue-dim); color: var(--blue); }
+  .sc { background: var(--purple-dim); color: var(--purple); }
+  .st { background: var(--green-dim); color: var(--green); }
+  .stitle { font-size: 12px; font-weight: 600; color: var(--text); margin-bottom: 2px; }
+  .sdet { font-size: 11px; color: var(--dim); font-family: 'JetBrains Mono', monospace; }
+
+  .pill { display: inline-block; background: var(--surface2); border: 1px solid var(--border); border-radius: 20px; padding: 3px 12px; font-size: 11.5px; color: var(--muted); margin: 2px; }
+
+  .dstep { display: flex; gap: 14px; align-items: flex-start; }
+  .dnum { width: 30px; height: 30px; border-radius: 50%; background: var(--blue-dim); border: 1.5px solid var(--blue); color: var(--blue); font-size: 13px; font-weight: 700; font-family: 'Syne', sans-serif; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .dbody h3 { font-size: 14px; margin-bottom: 3px; }
+  .dbody p { font-size: 12.5px; color: var(--muted); line-height: 1.55; }
+
+  hr { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
+  .sl2 { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; color: var(--dim); margin-bottom: 10px; display: block; }
 
   /* Cover */
-  .slide-cover {
-    text-align: center;
-    background: linear-gradient(135deg, #0d1117 0%, #161b22 100%);
-  }
-  .slide-cover .badge {
-    display: inline-block;
-    background: #238636;
-    color: #fff;
-    padding: 4px 14px;
-    border-radius: 20px;
-    font-size: 13px;
-    font-weight: 600;
-    margin-bottom: 24px;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-  }
-  .slide-cover h1 {
-    font-size: 56px;
-    font-weight: 700;
-    color: #f0f6fc;
-    margin-bottom: 16px;
-    line-height: 1.1;
-  }
-  .slide-cover .subtitle {
-    font-size: 22px;
-    color: #8b949e;
-    margin-bottom: 48px;
-  }
-  .cover-meta {
-    display: flex;
-    gap: 40px;
-    justify-content: center;
-    flex-wrap: wrap;
-  }
-  .cover-meta .item { text-align: center; }
-  .cover-meta .label {
-    font-size: 11px;
-    color: #6e7681;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    margin-bottom: 4px;
-  }
-  .cover-meta .value {
-    font-size: 18px;
-    color: #e6edf3;
-    font-weight: 600;
-  }
+  .cover-bg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; overflow: hidden; }
+  .cover-bg::before { content: ''; position: absolute; top: -200px; right: -200px; width: 600px; height: 600px; background: radial-gradient(circle, rgba(61,156,240,0.1) 0%, transparent 70%); }
+  .cover-bg::after { content: ''; position: absolute; bottom: -200px; left: -100px; width: 500px; height: 500px; background: radial-gradient(circle, rgba(164,124,255,0.07) 0%, transparent 70%); }
 
-  .slide-title {
-    font-size: 13px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 1.5px;
-    color: #388bfd;
-    margin-bottom: 12px;
-  }
-  h2 {
-    font-size: 36px;
-    font-weight: 700;
-    color: #f0f6fc;
-    margin-bottom: 32px;
-    line-height: 1.2;
-  }
-  h3 {
-    font-size: 18px;
-    font-weight: 600;
-    color: #e6edf3;
-    margin-bottom: 10px;
-  }
+  #s0 { justify-content: center; }
+  .cmeta { display: flex; gap: 32px; flex-wrap: wrap; margin-top: 36px; padding-top: 28px; border-top: 1px solid var(--border); }
+  .cmeta .ci .cl { font-size: 10px; color: var(--dim); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 2px; }
+  .cmeta .ci .cv { font-size: 17px; font-weight: 700; font-family: 'Syne', sans-serif; color: var(--text); }
 
-  .card-grid { display: grid; gap: 20px; }
-  .card-grid-3 { grid-template-columns: repeat(3, 1fr); }
-  .card-grid-2 { grid-template-columns: repeat(2, 1fr); }
-  .card-grid-4 { grid-template-columns: repeat(4, 1fr); }
+  /* demo slide */
+  #s8 { justify-content: flex-start; padding-top: 44px; }
+  .dcfg { background: var(--surface); border: 1px solid var(--border2); border-radius: 10px; padding: 14px 18px; margin-bottom: 16px; display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; }
+  .dcfg label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--dim); display: block; margin-bottom: 4px; }
+  .dcfg input { width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 6px 10px; color: var(--text); font-size: 12px; font-family: 'JetBrains Mono', monospace; outline: none; }
+  .dcfg input:focus { border-color: var(--blue); }
+  .dcfg .df { flex: 2; min-width: 170px; }
+  .dpanels { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .dp { display: flex; flex-direction: column; gap: 9px; }
+  .dp textarea { background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 8px 10px; color: var(--text); font-size: 11.5px; font-family: 'JetBrains Mono', monospace; resize: vertical; width: 100%; outline: none; }
+  .dp textarea:focus { border-color: var(--blue); }
+  .btn { border: none; border-radius: 6px; padding: 7px 16px; font-size: 12px; font-weight: 700; cursor: pointer; transition: opacity 0.15s; }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn-b { background: var(--blue); color: #fff; }
+  .btn-g { background: var(--green); color: #080c10; }
+  .outbox { background: #050810; border: 1px solid var(--border); border-radius: 6px; padding: 10px; font-size: 11px; color: var(--muted); min-height: 60px; white-space: pre-wrap; font-family: 'JetBrains Mono', monospace; display: none; }
+  .sbadge { background: var(--purple-dim); border: 1px solid rgba(164,124,255,0.4); border-radius: 8px; padding: 5px 14px; font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 700; color: var(--purple); }
+  .sbadge.dep { background: var(--red-dim); border-color: rgba(255,87,87,0.4); color: var(--red); }
 
-  .card {
-    background: #161b22;
-    border: 1px solid #30363d;
-    border-radius: 10px;
-    padding: 24px;
-  }
-  .card .card-tag {
-    display: inline-block;
-    font-size: 11px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    padding: 2px 10px;
-    border-radius: 12px;
-    margin-bottom: 12px;
-  }
-  .tag-blue   { background: #1f3a5f; color: #388bfd; }
-  .tag-green  { background: #1a3a2a; color: #3fb950; }
-  .tag-purple { background: #2a1f4a; color: #bc8cff; }
-  .tag-orange { background: #3a2a1a; color: #ffa657; }
-
-  .card p   { font-size: 14px; color: #8b949e; line-height: 1.6; }
-  .card ul  { list-style: none; padding: 0; }
-  .card ul li {
-    font-size: 14px;
-    color: #8b949e;
-    padding: 3px 0 3px 16px;
-    position: relative;
-  }
-  .card ul li::before { content: '→'; position: absolute; left: 0; color: #388bfd; font-size: 12px; }
-
-  pre {
-    background: #010409;
-    border: 1px solid #30363d;
-    border-radius: 8px;
-    padding: 20px 24px;
-    font-size: 13px;
-    line-height: 1.7;
-    overflow-x: auto;
-    font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
-  }
-  code { font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace; font-size: 13px; }
-  .kw  { color: #ff7b72; }
-  .str { color: #a5d6ff; }
-  .cm  { color: #8b949e; font-style: italic; }
-  .fn  { color: #d2a8ff; }
-  .num { color: #79c0ff; }
-
-  .flow {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    flex-wrap: wrap;
-    margin: 24px 0;
-  }
-  .flow-box {
-    background: #161b22;
-    border: 1px solid #30363d;
-    border-radius: 8px;
-    padding: 12px 20px;
-    font-size: 14px;
-    font-weight: 600;
-    color: #e6edf3;
-    text-align: center;
-  }
-  .flow-arrow { color: #388bfd; font-size: 20px; font-weight: 700; }
-
-  .stat-row { display: flex; gap: 24px; margin: 24px 0; flex-wrap: wrap; }
-  .stat {
-    background: #161b22;
-    border: 1px solid #30363d;
-    border-radius: 8px;
-    padding: 20px 28px;
-    text-align: center;
-    flex: 1;
-    min-width: 120px;
-  }
-  .stat .num   { font-size: 36px; font-weight: 700; color: #388bfd; display: block; line-height: 1; margin-bottom: 6px; }
-  .stat .label { font-size: 12px; color: #6e7681; text-transform: uppercase; letter-spacing: 1px; }
-
-  .tdd-row { display: flex; gap: 0; margin: 12px 0; }
-  .tdd-commit {
-    flex: 1;
-    padding: 14px 18px;
-    font-size: 13px;
-    border: 1px solid #30363d;
-    border-right: none;
-  }
-  .tdd-commit:first-child { border-radius: 8px 0 0 8px; }
-  .tdd-commit:last-child  { border-right: 1px solid #30363d; border-radius: 0 8px 8px 0; }
-  .tdd-red   { background: #1f0a0a; border-color: #f85149; }
-  .tdd-green { background: #0a1f0a; border-color: #3fb950; }
-  .tdd-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
-  .tdd-red   .tdd-label { color: #f85149; }
-  .tdd-green .tdd-label { color: #3fb950; }
-
-  .skill-card {
-    background: #161b22;
-    border: 1px solid #30363d;
-    border-radius: 10px;
-    padding: 20px;
-  }
-  .skill-card .cmd  { font-family: 'SF Mono','Fira Code',monospace; font-size: 16px; font-weight: 700; color: #bc8cff; margin-bottom: 8px; }
-  .skill-card .desc { font-size: 13px; color: #8b949e; margin-bottom: 12px; }
-  .skill-card .inp  { font-size: 12px; color: #6e7681; }
-
-  .tool-loop {
-    background: #161b22;
-    border: 1px solid #30363d;
-    border-radius: 10px;
-    padding: 28px;
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-  }
-  .tool-step { display: flex; align-items: flex-start; gap: 14px; }
-  .step-num {
-    width: 28px; height: 28px; border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 12px; font-weight: 700; flex-shrink: 0; margin-top: 2px;
-  }
-  .step-user   { background: #1f3a5f; color: #388bfd; }
-  .step-claude { background: #2a1f4a; color: #bc8cff; }
-  .step-tool   { background: #1a3a2a; color: #3fb950; }
-  .step-done   { background: #3a1a1f; color: #f85149; }
-  .step-title  { font-size: 13px; font-weight: 600; color: #e6edf3; margin-bottom: 3px; }
-  .step-detail { font-size: 12px; color: #6e7681; }
-
-  .demo-step { display: flex; gap: 20px; align-items: flex-start; margin-bottom: 28px; }
-  .demo-num {
-    width: 36px; height: 36px; border-radius: 50%;
-    background: #1f3a5f; border: 2px solid #388bfd;
-    color: #388bfd; font-size: 16px; font-weight: 700;
-    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
-  }
-  .demo-body h3   { margin-bottom: 6px; font-size: 16px; }
-  .demo-body p    { font-size: 14px; color: #8b949e; }
-
-  .tech-pill {
-    display: inline-block;
-    background: #161b22;
-    border: 1px solid #30363d;
-    border-radius: 20px;
-    padding: 6px 16px;
-    font-size: 13px;
-    color: #8b949e;
-    margin: 4px;
-  }
-
-  hr { border: none; border-top: 1px solid #21262d; margin: 32px 0; }
-
-  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; align-items: start; }
-  .section-label {
-    font-size: 11px; font-weight: 600; text-transform: uppercase;
-    letter-spacing: 1.5px; color: #6e7681; margin-bottom: 16px;
-    display: block;
-  }
-
-  @media (max-width: 800px) {
-    .slide { padding: 40px 24px; }
-    .card-grid-3, .card-grid-4, .card-grid-2, .two-col { grid-template-columns: 1fr; }
-    h2 { font-size: 26px; }
-    .slide-cover h1 { font-size: 36px; }
+  @media (max-width: 880px) {
+    .slide { padding: 36px 22px 68px; }
+    .g3,.g4,.g2,.tc,.dpanels { grid-template-columns: 1fr; }
+    h1 { font-size: 34px; } h2 { font-size: 24px; }
     .tdd-row { flex-direction: column; }
-    .tdd-commit { border-right: 1px solid #30363d; border-bottom: none; border-radius: 0; }
-    .tdd-commit:first-child { border-radius: 8px 8px 0 0; }
-    .tdd-commit:last-child  { border-bottom: 1px solid #30363d; border-radius: 0 0 8px 8px; }
+    .tc2 { border-right: 1px solid var(--border); border-bottom: none; border-radius: 0; }
+    .tc2:first-child { border-radius: 8px 8px 0 0; }
+    .tc2:last-child { border-bottom: 1px solid var(--border); border-radius: 0 0 8px 8px; }
   }
 </style>
 </head>
 <body>
 
-<!-- ===== COVER ===== -->
-<div class="slide slide-cover">
-  <div>
-    <div class="badge">VICI Take-Home</div>
-    <h1>AI Agent Platform</h1>
-    <p class="subtitle">Three tasks: CLI proxy &nbsp;·&nbsp; CI/CD skills &nbsp;·&nbsp; Browser automation</p>
-    <div class="cover-meta">
-      <div class="item"><div class="label">Tasks</div><div class="value">3</div></div>
-      <div class="item"><div class="label">Unit Tests</div><div class="value">60+</div></div>
-      <div class="item"><div class="label">Workflow</div><div class="value">Strict TDD</div></div>
-      <div class="item"><div class="label">Deploy</div><div class="value">Zeabur</div></div>
-      <div class="item"><div class="label">Date</div><div class="value">Mar 2026</div></div>
+<div id="progress-bar"></div>
+<div id="kb-hint">← → or Space</div>
+<div id="dots"></div>
+<div id="nav">
+  <button class="nav-btn" id="btn-prev" onclick="prev()">←</button>
+  <span id="slide-counter">1 / 8</span>
+  <button class="nav-btn" id="btn-next" onclick="next()">→</button>
+</div>
+
+<div id="slides-wrap">
+
+<!-- 0: COVER -->
+<div class="slide slide-center active" id="s0">
+  <div class="cover-bg"></div>
+  <div style="position:relative;z-index:1;">
+    <div class="chip cb">VICI Take-Home · Mar 2026</div>
+    <h1>AI Agent<br>Platform</h1>
+    <p class="lead">Three production-grade services built with strict TDD, deployed on Zeabur, and driven by Claude Code as the AI coding agent.</p>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:28px;">
+      <div class="chip cb">Task 1 · LiteLLM Proxy</div>
+      <div class="chip cp">Task 2 · GitHub Skills</div>
+      <div class="chip cg">Task 3 · Browser Agent</div>
+    </div>
+    <div class="cmeta">
+      <div class="ci"><div class="cl">Tasks</div><div class="cv">3 / 3</div></div>
+      <div class="ci"><div class="cl">Unit Tests</div><div class="cv">60+</div></div>
+      <div class="ci"><div class="cl">Workflow</div><div class="cv">TDD</div></div>
+      <div class="ci"><div class="cl">Deploy</div><div class="cv">Zeabur</div></div>
+      <div class="ci"><div class="cl">AI Tool</div><div class="cv">Claude Code</div></div>
     </div>
   </div>
 </div>
 
-<!-- ===== ARCHITECTURE ===== -->
-<div class="slide">
-  <div class="slide-title">Overview</div>
+<!-- 1: ARCHITECTURE -->
+<div class="slide" id="s1">
+  <div class="chip cb">Overview</div>
   <h2>Architecture</h2>
-  <p style="color:#8b949e;font-size:15px;margin-bottom:32px;">
-    Three independent but interconnected services — each deployed on Zeabur, wired together via HTTP.
-  </p>
+  <p class="lead">Three independent services wired together — each deployed on Zeabur, communicating via HTTP.</p>
 
-  <div class="flow">
-    <div class="flow-box" style="border-color:#bc8cff;">
-      <div style="font-size:11px;color:#bc8cff;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">Task 2</div>
-      GitHub Skills<br><span style="font-size:12px;color:#6e7681;">/gh-test · /gh-lint<br>/gh-deploy · /gh-status</span>
+  <div class="flow" style="margin-bottom:22px;">
+    <div class="fbox" style="border-color:var(--purple);">
+      <div style="font-size:9px;color:var(--purple);text-transform:uppercase;letter-spacing:1px;margin-bottom:2px;">Task 2</div>
+      GitHub Skills<br><span style="font-size:10px;color:var(--muted);">/gh-test · /gh-lint<br>/gh-deploy · /gh-status</span>
     </div>
-    <div class="flow-arrow">↕</div>
-    <div class="flow-box" style="border-color:#ffa657;">
-      <div style="font-size:11px;color:#ffa657;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">GitHub Actions</div>
-      test.yml · lint.yml<br><span style="font-size:12px;color:#6e7681;">deploy.yml</span>
+    <div class="farr">↕</div>
+    <div class="fbox" style="border-color:var(--orange);">
+      <div style="font-size:9px;color:var(--orange);text-transform:uppercase;letter-spacing:1px;margin-bottom:2px;">GitHub Actions</div>
+      test.yml · lint.yml<br><span style="font-size:10px;color:var(--muted);">deploy.yml</span>
     </div>
-    <div style="flex:1"></div>
-    <div class="flow-box" style="border-color:#3fb950;">
-      <div style="font-size:11px;color:#3fb950;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">Task 3</div>
-      Browser Agent<br><span style="font-size:12px;color:#6e7681;">POST /run-task</span>
+    <div style="flex:1;min-width:16px;"></div>
+    <div class="fbox" style="border-color:var(--green);">
+      <div style="font-size:9px;color:var(--green);text-transform:uppercase;letter-spacing:1px;margin-bottom:2px;">Task 3</div>
+      Browser Agent<br><span style="font-size:10px;color:var(--muted);">POST /run-task</span>
     </div>
-    <div class="flow-arrow">→</div>
-    <div class="flow-box" style="border-color:#388bfd;">
-      <div style="font-size:11px;color:#388bfd;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">Task 1</div>
-      LiteLLM Proxy<br><span style="font-size:12px;color:#6e7681;">POST /v1/chat/completions</span>
+    <div class="farr">→</div>
+    <div class="fbox" style="border-color:var(--blue);">
+      <div style="font-size:9px;color:var(--blue);text-transform:uppercase;letter-spacing:1px;margin-bottom:2px;">Task 1</div>
+      LiteLLM Proxy<br><span style="font-size:10px;color:var(--muted);">POST /v1/chat/completions</span>
     </div>
-    <div class="flow-arrow">→</div>
-    <div class="flow-box" style="border-color:#f85149;">
-      <div style="font-size:11px;color:#f85149;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">Anthropic</div>
-      Claude CLI<br><span style="font-size:12px;color:#6e7681;">claude -p "..."</span>
+    <div class="farr">→</div>
+    <div class="fbox" style="border-color:var(--red);">
+      <div style="font-size:9px;color:var(--red);text-transform:uppercase;letter-spacing:1px;margin-bottom:2px;">Anthropic</div>
+      Claude CLI<br><span style="font-size:10px;color:var(--muted);">claude -p "..."</span>
     </div>
   </div>
 
-  <div class="card-grid card-grid-3" style="margin-top:24px;">
-    <div class="card">
-      <div class="card-tag tag-blue">Task 1 · litellm-proxy</div>
-      <h3>OpenAI-compatible API</h3>
-      <ul>
-        <li>Wraps <code>claude</code> CLI as LiteLLM CustomLLM</li>
-        <li>Streaming + non-streaming</li>
-        <li>Tool-use via system prompt injection</li>
-        <li>Port 8080 on Zeabur</li>
-      </ul>
+  <div class="g3">
+    <div class="card" style="border-color:var(--blue-dim);">
+      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--dim);margin-bottom:8px;">GitHub Repo</div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--blue);word-break:break-all;">github.com/freedom870601/<br>claude-agent-platform</div>
+      <div style="margin-top:10px;font-size:12px;color:var(--muted);">Commit history shows strict TDD red→green pairs throughout</div>
     </div>
-    <div class="card">
-      <div class="card-tag tag-purple">Task 2 · github-skills</div>
-      <h3>Claude Code Skills</h3>
-      <ul>
-        <li>4 skills backed by <code>gh</code> CLI</li>
-        <li>Symlinked into <code>.claude/commands/</code></li>
-        <li>CONFIRM gate on deploy</li>
-        <li>Skill validator with safety check</li>
-      </ul>
+    <div class="card" style="border-color:var(--green-dim);">
+      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--dim);margin-bottom:8px;">Live Services (Zeabur)</div>
+      <div style="display:flex;flex-direction:column;gap:5px;">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:11.5px;"><span style="color:var(--blue);">Task 1</span> <span style="color:var(--muted);">litellm-proxy-vici.zeabur.app</span></div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:11.5px;"><span style="color:var(--green);">Task 3</span> <span style="color:var(--muted);">browser-agent.zeabur.app</span></div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:11.5px;"><span style="color:var(--purple);">Task 2</span> <span style="color:var(--muted);">Claude Code only (no HTTP)</span></div>
+      </div>
     </div>
-    <div class="card">
-      <div class="card-tag tag-green">Task 3 · browser-agent</div>
-      <h3>Autonomous Browser</h3>
-      <ul>
-        <li>FastAPI + Playwright + Claude tool loop</li>
-        <li>6 browser tools, up to 50 steps</li>
-        <li>Full step logs in response</li>
-        <li>Calls Task 1 proxy for LLM</li>
+    <div class="card" style="border-color:var(--purple-dim);">
+      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--dim);margin-bottom:8px;">AI Workflow</div>
+      <ul class="b">
+        <li>Entire project built with <strong style="color:var(--text);">Claude Code</strong></li>
+        <li>Skills used: <code>/project:tdd</code>, <code>/project:commit</code></li>
+        <li>TDD loop driven by Claude — tests first, then impl</li>
+        <li>All commits authored via Claude Code agent</li>
       </ul>
     </div>
   </div>
 </div>
 
-<!-- ===== TASK 1 ===== -->
-<div class="slide">
-  <div class="slide-title">Task 1</div>
+<!-- 2: TASK 1 -->
+<div class="slide" id="s2">
+  <div class="chip cb">Task 1</div>
   <h2>LiteLLM Proxy — Claude CLI as an API</h2>
-
-  <div class="two-col">
+  <div class="tc">
     <div>
-      <span class="section-label">What it does</span>
-      <p style="color:#8b949e;font-size:15px;margin-bottom:20px;">
-        Bridges the <code>claude</code> CLI tool into an <strong style="color:#e6edf3;">OpenAI-compatible</strong> endpoint.
-        Any client that speaks OpenAI can use Claude — no SDK changes needed.
-      </p>
-
-      <div class="flow" style="margin:0 0 20px;">
-        <div class="flow-box" style="font-size:13px;">OpenAI request</div>
-        <div class="flow-arrow">→</div>
-        <div class="flow-box" style="font-size:13px;border-color:#388bfd;">LiteLLM CustomLLM</div>
-        <div class="flow-arrow">→</div>
-        <div class="flow-box" style="font-size:13px;border-color:#f85149;"><code>claude -p</code></div>
+      <p class="lead" style="font-size:13.5px;margin-bottom:14px;">Bridges the <code>claude</code> CLI into an <strong style="color:var(--text);">OpenAI-compatible</strong> endpoint. Any client that speaks OpenAI can use Claude — no SDK changes.</p>
+      <div class="flow" style="margin:0 0 14px;">
+        <div class="fbox" style="font-size:11px;">OpenAI request</div>
+        <div class="farr">→</div>
+        <div class="fbox" style="font-size:11px;border-color:var(--blue);">LiteLLM CustomLLM</div>
+        <div class="farr">→</div>
+        <div class="fbox" style="font-size:11px;border-color:var(--red);"><code>claude -p</code></div>
       </div>
-
-      <span class="section-label">Key implementation details</span>
-      <ul style="list-style:none;padding:0;">
-        <li style="font-size:14px;color:#8b949e;padding:4px 0 4px 16px;position:relative;"><span style="position:absolute;left:0;color:#388bfd;">→</span><code>ClaudeCLIProvider(CustomLLM)</code> in <code>custom_handler.py</code></li>
-        <li style="font-size:14px;color:#8b949e;padding:4px 0 4px 16px;position:relative;"><span style="position:absolute;left:0;color:#388bfd;">→</span><code>acompletion()</code> + <code>astreaming()</code> async methods</li>
-        <li style="font-size:14px;color:#8b949e;padding:4px 0 4px 16px;position:relative;"><span style="position:absolute;left:0;color:#388bfd;">→</span>Multi-turn history → <code>Human: …\nAssistant: …</code></li>
-        <li style="font-size:14px;color:#8b949e;padding:4px 0 4px 16px;position:relative;"><span style="position:absolute;left:0;color:#388bfd;">→</span>Tools serialised into <code>--system-prompt</code>, JSON parsed back</li>
-        <li style="font-size:14px;color:#8b949e;padding:4px 0 4px 16px;position:relative;"><span style="position:absolute;left:0;color:#388bfd;">→</span><code>_SUBPROCESS_ENV = dict(os.environ)</code> — avoids uvloop <code>_Environ</code> rejection</li>
-        <li style="font-size:14px;color:#8b949e;padding:4px 0 4px 16px;position:relative;"><span style="position:absolute;left:0;color:#388bfd;">→</span>120-second timeout for Claude CLI subprocess</li>
+      <span class="sl2">Key implementation details</span>
+      <ul class="b">
+        <li><code>ClaudeCLIProvider(CustomLLM)</code> in <code>custom_handler.py</code></li>
+        <li><code>acompletion()</code> + <code>astreaming()</code> async methods</li>
+        <li>Multi-turn history → <code>Human: …\nAssistant: …</code></li>
+        <li>Tools serialised into <code>--system-prompt</code>, JSON parsed back</li>
+        <li><code>_SUBPROCESS_ENV = dict(os.environ)</code> — avoids uvloop rejection</li>
+        <li>120-second timeout for Claude CLI subprocess</li>
       </ul>
     </div>
-
     <div>
-      <span class="section-label">Demo — curl</span>
-<pre><code><span class="cm"># Non-streaming</span>
-curl -X POST https://litellm-proxy.zeabur.app \
-     /v1/chat/completions \
-  -H <span class="str">"Authorization: Bearer $KEY"</span> \
+      <span class="sl2">Demo — curl</span>
+<pre style="height:100%;margin:0;"><code><span class="cm"># Non-streaming</span>
+curl -X POST https://litellm-proxy-vici.zeabur.app/v1/chat/completions \
+  -H <span class="str">"Authorization: Bearer $KEY"</span> <span class="cm"># $KEY = LiteLLM master key (set in Zeabur dashboard)</span> \
   -H <span class="str">"Content-Type: application/json"</span> \
   -d <span class="str">'{
     "model": "claude-cli/claude-sonnet-4-5",
-    "messages": [
-      {"role":"user","content":"Hello"}
-    ]
+    "messages": [{"role":"user","content":"Hello"}]
   }'</span>
 
 <span class="cm"># Streaming — returns SSE chunks</span>
@@ -418,130 +304,87 @@ curl ... -d <span class="str">'{
       "parameters": { ... }
     }
   }]
-}'</span>
-</code></pre>
+}'</span></code></pre>
     </div>
   </div>
 </div>
 
-<!-- ===== TASK 2 ===== -->
-<div class="slide">
-  <div class="slide-title">Task 2</div>
+<!-- 3: TASK 2 -->
+<div class="slide" id="s3">
+  <div class="chip cp">Task 2</div>
   <h2>GitHub Skills — CI/CD as Claude Commands</h2>
-
-  <p style="color:#8b949e;font-size:15px;margin-bottom:28px;">
-    Four <code>.md</code> skill files in <code>github-skills/skills/</code>, symlinked into <code>.claude/commands/</code>.
-    Invoke directly from Claude Code — no copy-paste, no context switching.
-  </p>
-
-  <div class="card-grid card-grid-4" style="margin-bottom:32px;">
-    <div class="skill-card">
-      <div class="cmd">/gh-status</div>
-      <div class="desc">List recent workflow runs. Read-only — safe to call any time.</div>
-      <div class="inp">repo (required) · limit (default: 10)</div>
+  <p class="lead" style="font-size:13.5px;">Four <code>.md</code> skill files in <code>github-skills/skills/</code>, symlinked into <code>.claude/commands/</code>. Invoke directly from Claude Code — no copy-paste, no context switching.</p>
+  <div class="g4" style="margin-bottom:20px;">
+    <div class="sk-card">
+      <div class="sk-cmd">/gh-status</div>
+      <div class="sk-desc">List recent workflow runs. Read-only — safe to call any time.</div>
+      <div class="sk-inp">repo (required) · limit (default: 10)</div>
     </div>
-    <div class="skill-card">
-      <div class="cmd">/gh-test</div>
-      <div class="desc">Trigger <code>test.yml</code>, poll until complete, return pass/fail + URL.</div>
-      <div class="inp">repo (required) · branch (default: main)</div>
+    <div class="sk-card">
+      <div class="sk-cmd">/gh-test</div>
+      <div class="sk-desc">Trigger <code>test.yml</code>, poll until complete, return pass/fail + URL.</div>
+      <div class="sk-inp">repo (required) · branch (default: main)</div>
     </div>
-    <div class="skill-card">
-      <div class="cmd">/gh-lint</div>
-      <div class="desc">Trigger <code>lint.yml</code>, poll with 10 s intervals (max 5 min).</div>
-      <div class="inp">repo (required) · branch (default: main)</div>
+    <div class="sk-card">
+      <div class="sk-cmd">/gh-lint</div>
+      <div class="sk-desc">Trigger <code>lint.yml</code>, poll with 10 s intervals (max 5 min).</div>
+      <div class="sk-inp">repo (required) · branch (default: main)</div>
     </div>
-    <div class="skill-card" style="border-color:#f85149;">
-      <div class="cmd" style="color:#f85149;">/gh-deploy</div>
-      <div class="desc">Deploy with <strong style="color:#f85149;">mandatory CONFIRM gate</strong>. Auto-detects repo &amp; changed service.</div>
-      <div class="inp">repo · branch · environment · service</div>
+    <div class="sk-card" style="border-color:var(--red);">
+      <div class="sk-cmd" style="color:var(--red);">/gh-deploy</div>
+      <div class="sk-desc">Deploy with <strong style="color:var(--red);">mandatory CONFIRM gate</strong>. Auto-detects repo &amp; changed service.</div>
+      <div class="sk-inp">repo · branch · environment · service</div>
     </div>
   </div>
-
-  <div class="two-col">
+  <div class="tc">
     <div>
-      <span class="section-label">Safety design</span>
+      <span class="sl2">Safety design</span>
       <div class="card">
-        <ul>
-          <li>Deploy skill requires user to type <code>CONFIRM</code> before dispatch</li>
+        <ul class="b">
+          <li>Deploy requires user to type <code>CONFIRM</code> before dispatch</li>
           <li>Validator warns on embedded credentials / Bearer tokens</li>
           <li><code>validator.py</code> enforces schema: name, description, version, inputs, outputs</li>
-          <li><code>test_all_skills_valid()</code> runs in CI — all 4 skill files must pass</li>
+          <li><code>test_all_skills_valid()</code> runs in CI — all 4 files must pass</li>
         </ul>
       </div>
     </div>
     <div>
-      <span class="section-label">Auto-detect in /gh-deploy</span>
+      <span class="sl2">Auto-detect in /gh-deploy</span>
 <pre><code><span class="cm"># Detect repo from git remote</span>
 git remote get-url origin
-<span class="cm"># → https://github.com/user/repo.git
-#   or git@github.com:user/repo.git</span>
+<span class="cm"># → https://github.com/user/repo.git</span>
 
 <span class="cm"># Detect changed service from diff</span>
 git diff --name-only HEAD~1
 <span class="cm"># litellm-proxy/** → service=litellm-proxy
 # browser-agent/** → service=browser-agent
 # both / neither   → service=all</span>
-</code></pre>
-    </div>
-  </div>
 
-  <div style="margin-top:24px;">
-    <span class="section-label">Symlink installation — skills auto-sync when edited</span>
-<pre><code>ln -s ../github-skills/skills .claude/commands</code></pre>
+<span class="cm"># Symlink install</span>
+ln -s ../github-skills/skills .claude/commands</code></pre>
+    </div>
   </div>
 </div>
 
-<!-- ===== TASK 3 ===== -->
-<div class="slide">
-  <div class="slide-title">Task 3</div>
+<!-- 4: TASK 3 -->
+<div class="slide" id="s4">
+  <div class="chip cg">Task 3</div>
   <h2>Browser Agent — Natural Language → Web Actions</h2>
-
-  <div class="two-col" style="margin-bottom:32px;">
+  <div class="tc">
     <div>
-      <span class="section-label">Tool-use loop</span>
-      <div class="tool-loop">
-        <div class="tool-step">
-          <div class="step-num step-user">U</div>
-          <div>
-            <div class="step-title">POST /run-task</div>
-            <div class="step-detail">{"task": "What is the latest Python release?"}</div>
-          </div>
-        </div>
-        <div class="tool-step">
-          <div class="step-num step-claude">C</div>
-          <div>
-            <div class="step-title">Claude decides: call browser_search</div>
-            <div class="step-detail">tool_calls → {name: "browser_search", args: {query: "..."}}</div>
-          </div>
-        </div>
-        <div class="tool-step">
-          <div class="step-num step-tool">T</div>
-          <div>
-            <div class="step-title">Execute: DuckDuckGo search</div>
-            <div class="step-detail">Result added back to conversation as tool message</div>
-          </div>
-        </div>
-        <div class="tool-step">
-          <div class="step-num step-claude">C</div>
-          <div>
-            <div class="step-title">Claude decides: navigate + extract_text</div>
-            <div class="step-detail">Reads python.org/downloads page body (&le;8 000 chars)</div>
-          </div>
-        </div>
-        <div class="tool-step">
-          <div class="step-num step-done">✓</div>
-          <div>
-            <div class="step-title">Claude calls done(answer)</div>
-            <div class="step-detail">Loop exits immediately — returns final answer + full logs</div>
-          </div>
-        </div>
+      <span class="sl2">Tool-use loop</span>
+      <div class="tloop">
+        <div class="tstep"><div class="snum su">U</div><div><div class="stitle">POST /run-task</div><div class="sdet">{"task": "What is the latest Python release?"}</div></div></div>
+        <div class="tstep"><div class="snum sc">C</div><div><div class="stitle">Claude decides: call browser_search</div><div class="sdet">tool_calls → {name: "browser_search", args: {…}}</div></div></div>
+        <div class="tstep"><div class="snum st">T</div><div><div class="stitle">Execute: DuckDuckGo search</div><div class="sdet">Result added back as tool message</div></div></div>
+        <div class="tstep"><div class="snum sc">C</div><div><div class="stitle">Claude decides: navigate + extract_text</div><div class="sdet">Reads python.org/downloads body (≤8 000 chars)</div></div></div>
+        <div class="tstep"><div class="snum st">✓</div><div><div class="stitle">Claude calls done(answer)</div><div class="sdet">Loop exits — returns answer + full logs</div></div></div>
       </div>
     </div>
-
     <div>
-      <span class="section-label">6 browser tools</span>
-      <div class="card" style="margin-bottom:16px;">
-        <ul>
+      <span class="sl2">6 browser tools</span>
+      <div class="card" style="margin-bottom:12px;">
+        <ul class="b">
           <li><code>browser_search(query)</code> — DuckDuckGo HTML (no API key)</li>
           <li><code>navigate(url)</code> — Playwright goto, returns title</li>
           <li><code>extract_text()</code> — page body ≤ 8 000 chars</li>
@@ -550,7 +393,7 @@ git diff --name-only HEAD~1
           <li><code>done(answer)</code> — terminates loop with result</li>
         </ul>
       </div>
-      <span class="section-label">POST /run-task response</span>
+      <span class="sl2">POST /run-task response</span>
 <pre><code>{
   <span class="str">"task_id"</span>: <span class="str">"uuid"</span>,
   <span class="str">"status"</span>: <span class="str">"completed"</span>,
@@ -568,446 +411,240 @@ git diff --name-only HEAD~1
   </div>
 </div>
 
-<!-- ===== TDD ===== -->
-<div class="slide">
-  <div class="slide-title">Quality</div>
-  <h2>TDD Evidence — Red &rarr; Green</h2>
-
+<!-- 5: TDD -->
+<div class="slide" id="s5">
+  <div class="chip co">Quality</div>
+  <h2>TDD Evidence — Red → Green</h2>
   <div class="stat-row">
-    <div class="stat"><span class="num">60+</span><div class="label">Unit Tests</div></div>
-    <div class="stat"><span class="num">23</span><div class="label">Task 1</div></div>
-    <div class="stat"><span class="num">11</span><div class="label">Task 2</div></div>
-    <div class="stat"><span class="num">26</span><div class="label">Task 3</div></div>
-    <div class="stat"><span class="num">7</span><div class="label">Integration</div></div>
+    <div class="stat"><span class="sn">73+</span><div class="sl">Unit Tests<br><span style="font-size:9px;color:var(--dim);">(+ 6 integration)</span></div></div>
+    <div class="stat"><span class="sn" style="color:var(--blue);">28</span><div class="sl">Task 1</div></div>
+    <div class="stat"><span class="sn" style="color:var(--purple);">13</span><div class="sl">Task 2</div></div>
+    <div class="stat"><span class="sn" style="color:var(--green);">32</span><div class="sl">Task 3</div></div>
   </div>
-
-  <span class="section-label" style="margin-top:8px;">Actual git commit pairs</span>
-
-  <div class="tdd-row">
-    <div class="tdd-commit tdd-red">
-      <div class="tdd-label">🔴 Failing test</div>
-      <code>test(task1): add failing test for simple user message assembly</code>
-    </div>
-    <div class="tdd-commit tdd-green">
-      <div class="tdd-label">🟢 Implementation</div>
-      <code>feat(task1): implement assemble_prompt for simple user message</code>
-    </div>
-  </div>
-
-  <div class="tdd-row">
-    <div class="tdd-commit tdd-red">
-      <div class="tdd-label">🔴 Failing test</div>
-      <code>test(task1): add failing tests for CLI command builder</code>
-    </div>
-    <div class="tdd-commit tdd-green">
-      <div class="tdd-label">🟢 Implementation</div>
-      <code>feat(task1): implement _build_cmd for claude CLI invocation</code>
-    </div>
-  </div>
-
-  <div class="tdd-row">
-    <div class="tdd-commit tdd-red">
-      <div class="tdd-label">🔴 Failing test</div>
-      <code>test(task1): add failing test for astreaming yields text chunks</code>
-    </div>
-    <div class="tdd-commit tdd-green">
-      <div class="tdd-label">🟢 Implementation</div>
-      <code>feat(task1): implement astreaming with JSON line parsing</code>
-    </div>
-  </div>
-
-  <div class="tdd-row">
-    <div class="tdd-commit tdd-red">
-      <div class="tdd-label">🔴 Failing test</div>
-      <code>test(task2): add failing tests for load_frontmatter, check_required_fields, check_safe_boundary</code>
-    </div>
-    <div class="tdd-commit tdd-green">
-      <div class="tdd-label">🟢 Implementation</div>
-      <code>feat(task2): implement load_frontmatter, check_required_fields, validate_skill</code>
-    </div>
-  </div>
-
-  <div class="tdd-row">
-    <div class="tdd-commit tdd-red">
-      <div class="tdd-label">🔴 Failing test</div>
-      <code>test(task2): add failing test that all skill files pass validate_skill</code>
-    </div>
-    <div class="tdd-commit tdd-green">
-      <div class="tdd-label">🟢 Implementation</div>
-      <code>feat(task2): add skill markdown files (gh-lint, gh-test, gh-deploy, gh-status)</code>
-    </div>
-  </div>
-
-  <hr>
-  <span class="section-label">Run commands</span>
-<pre><code><span class="cm"># Unit tests only — no external services required</span>
-cd task1 &amp;&amp; uv run pytest tests/ -v -m <span class="str">"not integration"</span>
-cd task2 &amp;&amp; uv run pytest tests/ -v
-cd task3 &amp;&amp; uv run pytest tests/ -v -m <span class="str">"not integration"</span>
-
-<span class="cm"># Integration tests — require running services</span>
-uv run pytest tests/ -v -m integration</code></pre>
+  <span class="sl2" style="margin-top:6px;">Actual git commit pairs</span>
+  <div class="tdd-row"><div class="tc2 tr"><div class="tl">🔴 Failing test</div><code>test(task1): add failing test for simple user message assembly</code></div><div class="tc2 tg"><div class="tl">🟢 Implementation</div><code>feat(task1): implement assemble_prompt for simple user message</code></div></div>
+  <div class="tdd-row"><div class="tc2 tr"><div class="tl">🔴 Failing test</div><code>test(task1): add failing tests for CLI command builder</code></div><div class="tc2 tg"><div class="tl">🟢 Implementation</div><code>feat(task1): implement _build_cmd for claude CLI invocation</code></div></div>
+  <div class="tdd-row"><div class="tc2 tr"><div class="tl">🔴 Failing test</div><code>test(task1): add failing test for astreaming yields text chunks</code></div><div class="tc2 tg"><div class="tl">🟢 Implementation</div><code>feat(task1): implement astreaming with JSON line parsing</code></div></div>
+  <div class="tdd-row"><div class="tc2 tr"><div class="tl">🔴 Failing test</div><code>test(task2): add failing tests for load_frontmatter, check_required_fields</code></div><div class="tc2 tg"><div class="tl">🟢 Implementation</div><code>feat(task2): implement load_frontmatter, check_required_fields, validate_skill</code></div></div>
+  <div class="tdd-row"><div class="tc2 tr"><div class="tl">🔴 Failing test</div><code>test(task2): add failing test that all skill files pass validate_skill</code></div><div class="tc2 tg"><div class="tl">🟢 Implementation</div><code>feat(task2): add skill markdown files (gh-lint, gh-test, gh-deploy, gh-status)</code></div></div>
+  <div class="tdd-row"><div class="tc2 tr"><div class="tl">🔴 Failing test</div><code>test(task3): add failing test for browser_search returns results list</code></div><div class="tc2 tg"><div class="tl">🟢 Implementation</div><code>feat(task3): implement browser_search tool with DuckDuckGo HTML parser</code></div></div>
 </div>
 
-<!-- ===== LIVE DEMO ===== -->
-<div class="slide">
-  <div class="slide-title">Walkthrough</div>
-  <h2>Suggested Live Demo Flow</h2>
-
-  <div class="demo-step">
-    <div class="demo-num">1</div>
-    <div class="demo-body">
-      <h3>Unit tests passing</h3>
-      <p><code>cd task1 &amp;&amp; uv run pytest tests/ -v -m "not integration"</code> — all green, no network required. Repeat for task2 and task3.</p>
-    </div>
-  </div>
-
-  <div class="demo-step">
-    <div class="demo-num">2</div>
-    <div class="demo-body">
-      <h3>Task 1: curl the LiteLLM proxy</h3>
-      <p>POST /v1/chat/completions with a simple message. Then <code>"stream":true</code> to show SSE chunks arrive line by line. Then with a <code>tools</code> array to show JSON tool_call parsing round-trip.</p>
-    </div>
-  </div>
-
-  <div class="demo-step">
-    <div class="demo-num">3</div>
-    <div class="demo-body">
-      <h3>Task 2: run skills from Claude Code</h3>
-      <p><code>/gh-status laiyanru/claude-agent-platform</code> — lists recent CI runs instantly.<br>
-         <code>/gh-test laiyanru/claude-agent-platform</code> — triggers workflow, polls, shows result URL.<br>
-         Show <code>/gh-deploy</code> prompt requiring <code>CONFIRM</code> before any dispatch.</p>
-    </div>
-  </div>
-
-  <div class="demo-step">
-    <div class="demo-num">4</div>
-    <div class="demo-body">
-      <h3>Task 3: browser agent end-to-end</h3>
-      <p>POST /run-task with <code>"task":"What is the current Python stable version?"</code>.<br>
-         Observe <code>logs[]</code> array showing each browser_search → navigate → extract_text → done step with timestamps.</p>
-    </div>
-  </div>
-
-  <div class="demo-step">
-    <div class="demo-num">5</div>
-    <div class="demo-body">
-      <h3>TDD git log</h3>
-      <p><code>git log --oneline</code> — alternating <code>test(…):</code> / <code>feat(…):</code> commit pairs. Each feature has a red commit before the green one. No test + implementation bundled in the same commit.</p>
-    </div>
-  </div>
-
-  <div class="demo-step">
-    <div class="demo-num">6</div>
-    <div class="demo-body">
-      <h3>Architecture tie-together</h3>
-      <p>Browser agent → litellm-proxy → claude CLI → Anthropic.<br>
-         GitHub Skills → gh CLI → GitHub Actions → Zeabur deploy.<br>
-         Single <code>ANTHROPIC_API_KEY</code> flows through both chains.</p>
-    </div>
-  </div>
-</div>
-
-<!-- ===== TECH STACK ===== -->
-<div class="slide">
-  <div class="slide-title">Summary</div>
-  <h2>Tech Stack</h2>
-
-  <div class="card-grid card-grid-2" style="margin-bottom:32px;">
-    <div class="card">
-      <div class="card-tag tag-blue">Backend</div>
-      <div style="margin-top:8px;">
-        <span class="tech-pill">Python 3.11</span>
-        <span class="tech-pill">FastAPI</span>
-        <span class="tech-pill">LiteLLM</span>
-        <span class="tech-pill">Playwright</span>
-        <span class="tech-pill">Pydantic v2</span>
-        <span class="tech-pill">uvicorn</span>
-        <span class="tech-pill">asyncio</span>
-        <span class="tech-pill">uv</span>
-      </div>
-    </div>
-    <div class="card">
-      <div class="card-tag tag-orange">AI / CLI</div>
-      <div style="margin-top:8px;">
-        <span class="tech-pill">Claude CLI</span>
-        <span class="tech-pill">claude-sonnet-4-5</span>
-        <span class="tech-pill">OpenAI tool_calls format</span>
-        <span class="tech-pill">stream-json</span>
-        <span class="tech-pill">ANTHROPIC_API_KEY</span>
-      </div>
-    </div>
-    <div class="card">
-      <div class="card-tag tag-purple">CI/CD &amp; Deploy</div>
-      <div style="margin-top:8px;">
-        <span class="tech-pill">GitHub Actions</span>
-        <span class="tech-pill">gh CLI</span>
-        <span class="tech-pill">Docker</span>
-        <span class="tech-pill">Zeabur</span>
-        <span class="tech-pill">zeabur.yaml</span>
-        <span class="tech-pill">Claude Code Skills</span>
-      </div>
-    </div>
-    <div class="card">
-      <div class="card-tag tag-green">Testing</div>
-      <div style="margin-top:8px;">
-        <span class="tech-pill">pytest</span>
-        <span class="tech-pill">pytest-asyncio</span>
-        <span class="tech-pill">unittest.mock</span>
-        <span class="tech-pill">httpx TestClient</span>
-        <span class="tech-pill">60+ unit tests</span>
-        <span class="tech-pill">@pytest.mark.integration</span>
-      </div>
-    </div>
-  </div>
-
-  <div class="card" style="background:#0d1117;border-color:#238636;">
-    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px;">
-      <div>
-        <div style="font-size:20px;font-weight:700;color:#3fb950;margin-bottom:4px;">All three tasks complete</div>
-        <div style="font-size:14px;color:#8b949e;">Strict TDD workflow &nbsp;·&nbsp; Zeabur deployment &nbsp;·&nbsp; GitHub CI/CD &nbsp;·&nbsp; Claude Skills symlinked</div>
-      </div>
-      <div style="display:flex;gap:24px;">
-        <div style="text-align:center;">
-          <div style="font-size:32px;font-weight:700;color:#3fb950;">60+</div>
-          <div style="font-size:11px;color:#6e7681;text-transform:uppercase;">Tests</div>
-        </div>
-        <div style="text-align:center;">
-          <div style="font-size:32px;font-weight:700;color:#3fb950;">3</div>
-          <div style="font-size:11px;color:#6e7681;text-transform:uppercase;">Services</div>
-        </div>
-        <div style="font-size:36px;color:#3fb950;display:flex;align-items:center;">&#10003;</div>
-      </div>
-    </div>
-  </div>
-</div>
-
-
-<!-- ===== INTERACTIVE DEMO ===== -->
-<div class="slide" id="slide-demo" style="justify-content:flex-start;padding-top:60px;">
-  <div class="slide-title">Live</div>
+<!-- 8: INTERACTIVE DEMO -->
+<div class="slide" id="s8">
+  <div class="chip cg">Live</div>
   <h2>Interactive Demo</h2>
-
-  <!-- Config bar -->
-  <div style="background:#161b22;border:1px solid #30363d;border-radius:10px;padding:18px 24px;margin-bottom:28px;display:flex;gap:16px;flex-wrap:wrap;align-items:flex-end;">
-    <div style="flex:2;min-width:200px;">
-      <label style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:#6e7681;display:block;margin-bottom:6px;">LiteLLM Proxy URL</label>
-      <input id="cfg-litellm" type="text" value="https://litellm-proxy-vici.zeabur.app"
-        style="width:100%;background:#0d1117;border:1px solid #30363d;border-radius:6px;padding:8px 12px;color:#e6edf3;font-size:13px;font-family:monospace;">
-    </div>
-    <div style="flex:2;min-width:200px;">
-      <label style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:#6e7681;display:block;margin-bottom:6px;">Browser Agent URL</label>
-      <input id="cfg-agent" type="text" value="https://brower-agent.zeabur.app"
-        style="width:100%;background:#0d1117;border:1px solid #30363d;border-radius:6px;padding:8px 12px;color:#e6edf3;font-size:13px;font-family:monospace;">
-    </div>
-    <div style="flex:2;min-width:200px;">
-      <label style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:#6e7681;display:block;margin-bottom:6px;">Master Key</label>
-      <input id="cfg-key" type="password" placeholder="sk-…"
-        style="width:100%;background:#0d1117;border:1px solid #30363d;border-radius:6px;padding:8px 12px;color:#e6edf3;font-size:13px;font-family:monospace;">
-    </div>
+  <div class="dcfg">
+    <div class="df"><label>LiteLLM Proxy URL</label><input id="cfg-litellm" type="text" value="https://litellm-proxy-vici.zeabur.app" style="max-width:340px;"></div>
+    <div class="df"><label>Browser Agent URL</label><input id="cfg-agent" type="text" value="https://browser-agent.zeabur.app" style="max-width:340px;"></div>
+    <div class="df" style="flex:1.2;"><label>Master Key</label><input id="cfg-key" type="password" placeholder="sk-…"></div>
   </div>
-
-  <div class="card-grid card-grid-2" style="gap:20px;">
-
-    <!-- Panel 1: LiteLLM Proxy -->
-    <div class="card" style="display:flex;flex-direction:column;gap:14px;">
-      <div style="display:flex;align-items:center;gap:10px;">
-        <div class="card-tag tag-blue" style="margin:0;">Task 1</div>
-        <h3 style="margin:0;font-size:16px;">LiteLLM Proxy</h3>
-      </div>
-      <p style="font-size:13px;color:#6e7681;margin:0;">將 <code>claude</code> CLI 包裝成 OpenAI 相容的 API — 任何支援 OpenAI 格式的工具都能直接呼叫 Claude，無需改動 SDK。</p>
-      <textarea id="t1-prompt" rows="4" placeholder="Enter prompt…"
-        style="background:#0d1117;border:1px solid #30363d;border-radius:6px;padding:10px 12px;color:#e6edf3;font-size:13px;font-family:inherit;resize:vertical;width:100%;"></textarea>
-      <div style="display:flex;gap:10px;align-items:center;">
-        <button id="t1-send" onclick="sendLiteLLM()"
-          style="background:#238636;border:none;border-radius:6px;padding:8px 20px;color:#fff;font-size:13px;font-weight:600;cursor:pointer;">Send</button>
-        <span id="t1-spinner" style="display:none;color:#8b949e;font-size:13px;">⏳ waiting…</span>
-      </div>
-      <div id="t1-output" style="background:#010409;border:1px solid #30363d;border-radius:6px;padding:14px;font-size:13px;color:#8b949e;min-height:80px;white-space:pre-wrap;font-family:monospace;display:none;"></div>
-    </div>
-
-    <!-- Panel 2: Browser Agent -->
-    <div class="card" style="display:flex;flex-direction:column;gap:14px;">
-      <div style="display:flex;align-items:center;gap:10px;">
-        <div class="card-tag tag-green" style="margin:0;">Task 3</div>
-        <h3 style="margin:0;font-size:16px;">Browser Agent</h3>
-      </div>
-      <p style="font-size:13px;color:#6e7681;margin:0;">輸入一個自然語言任務，Agent 自動操控瀏覽器（搜尋、導航、擷取文字）並回傳結果與每個步驟的操作紀錄。</p>
-      <textarea id="t3-task" rows="4" placeholder="Describe a browsing task…"
-        style="background:#0d1117;border:1px solid #30363d;border-radius:6px;padding:10px 12px;color:#e6edf3;font-size:13px;font-family:inherit;resize:vertical;width:100%;"></textarea>
-      <div style="display:flex;gap:10px;align-items:center;">
-        <label style="font-size:12px;color:#8b949e;">max_steps</label>
-        <input id="t3-steps" type="number" value="10" min="1" max="50"
-          style="width:60px;background:#0d1117;border:1px solid #30363d;border-radius:6px;padding:6px 8px;color:#e6edf3;font-size:13px;text-align:center;">
-        <button id="t3-run" onclick="runAgent()"
-          style="background:#1a7f37;border:none;border-radius:6px;padding:8px 20px;color:#fff;font-size:13px;font-weight:600;cursor:pointer;">Run</button>
-        <span id="t3-spinner" style="display:none;color:#8b949e;font-size:13px;">⏳ running…</span>
-      </div>
-      <div id="t3-status" style="display:none;margin-bottom:4px;"></div>
-      <div id="t3-result" style="background:#010409;border:1px solid #30363d;border-radius:6px;padding:14px;font-size:13px;color:#8b949e;white-space:pre-wrap;font-family:monospace;display:none;"></div>
-      <details id="t3-logs-wrap" style="display:none;">
-        <summary style="cursor:pointer;font-size:12px;color:#6e7681;padding:6px 0;">Step logs</summary>
-        <div style="overflow-x:auto;margin-top:8px;">
-          <table id="t3-logs-table" style="width:100%;border-collapse:collapse;font-size:12px;font-family:monospace;">
-            <thead>
-              <tr style="color:#6e7681;text-align:left;border-bottom:1px solid #30363d;">
-                <th style="padding:6px 10px;">Step</th>
-                <th style="padding:6px 10px;">Action</th>
-                <th style="padding:6px 10px;">Input</th>
-                <th style="padding:6px 10px;">Output</th>
-              </tr>
-            </thead>
-            <tbody id="t3-logs-body"></tbody>
-          </table>
+  <div class="dpanels">
+    <div class="dp">
+      <div class="card" style="flex:none;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:9px;"><div class="chip cb" style="margin:0;">Task 1</div><h3 style="margin:0;font-size:13px;">LiteLLM Proxy</h3></div>
+        <p style="font-size:11.5px;color:var(--muted);margin-bottom:9px;">Wraps the claude CLI as an OpenAI-compatible API — any client that speaks the OpenAI format can call Claude directly.</p>
+        <textarea id="t1-prompt" rows="3" placeholder="Enter prompt…"></textarea>
+        <div style="display:flex;gap:8px;align-items:center;margin-top:7px;">
+          <button class="btn btn-b" id="t1-send" onclick="sendLiteLLM()">Send</button>
+          <span id="t1-spin" style="display:none;color:var(--muted);font-size:11px;font-family:'JetBrains Mono',monospace;">⏳ waiting…</span>
         </div>
+      </div>
+      <div id="t1-out" class="outbox"></div>
+    </div>
+    <div class="dp">
+      <div class="card" style="flex:none;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:9px;"><div class="chip cg" style="margin:0;">Task 3</div><h3 style="margin:0;font-size:13px;">Browser Agent</h3></div>
+        <p style="font-size:11.5px;color:var(--muted);margin-bottom:9px;">Describe a task in plain English. The agent controls a real browser and returns the result with a step-by-step log.</p>
+        <textarea id="t3-task" rows="3" placeholder="Describe a browsing task…"></textarea>
+        <div style="display:flex;gap:8px;align-items:center;margin-top:7px;">
+          <label style="font-size:10px;color:var(--muted);">max_steps</label>
+          <input id="t3-steps" type="number" value="10" min="1" max="50" style="width:48px;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:4px 6px;color:var(--text);font-size:11px;text-align:center;font-family:'JetBrains Mono',monospace;">
+          <button class="btn btn-g" id="t3-run" onclick="runAgent()">Run</button>
+          <span id="t3-spin" style="display:none;color:var(--muted);font-size:11px;font-family:'JetBrains Mono',monospace;">⏳ running…</span>
+        </div>
+      </div>
+      <div id="t3-status" style="display:none;margin-bottom:3px;"></div>
+      <div id="t3-out" class="outbox"></div>
+      <details id="t3-logs-wrap" style="display:none;">
+        <summary style="cursor:pointer;font-size:10px;color:var(--dim);padding:4px 0;font-family:'JetBrains Mono',monospace;">Step logs</summary>
+        <table id="t3-logs-table" style="width:100%;border-collapse:collapse;font-size:10.5px;font-family:'JetBrains Mono',monospace;margin-top:5px;">
+          <thead><tr style="color:var(--dim);text-align:left;border-bottom:1px solid var(--border);"><th style="padding:4px 7px;">Step</th><th style="padding:4px 7px;">Action</th><th style="padding:4px 7px;">Input</th><th style="padding:4px 7px;">Output</th></tr></thead>
+          <tbody id="t3-logs-body"></tbody>
+        </table>
       </details>
     </div>
-
-    <!-- Panel 3: GitHub Skills (read-only) -->
-    <div class="card card-grid-2" style="grid-column:1/-1;">
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
-        <div class="card-tag tag-purple" style="margin:0;">Task 2</div>
-        <h3 style="margin:0;font-size:16px;">GitHub Skills</h3>
-      </div>
-      <p style="font-size:13px;color:#6e7681;margin:0 0 12px;">將 CI/CD 操作封裝成 Claude Code 指令 — 在編輯器裡直接觸發測試、Lint、部署，不需要切換到瀏覽器或終端機。</p>
-      <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px;">
-        <span style="background:#2a1f4a;border:1px solid #bc8cff;border-radius:8px;padding:8px 18px;font-family:monospace;font-size:15px;font-weight:700;color:#bc8cff;">/gh-status</span>
-        <span style="background:#2a1f4a;border:1px solid #bc8cff;border-radius:8px;padding:8px 18px;font-family:monospace;font-size:15px;font-weight:700;color:#bc8cff;">/gh-test</span>
-        <span style="background:#2a1f4a;border:1px solid #bc8cff;border-radius:8px;padding:8px 18px;font-family:monospace;font-size:15px;font-weight:700;color:#bc8cff;">/gh-lint</span>
-        <span style="background:#3a1a1f;border:1px solid #f85149;border-radius:8px;padding:8px 18px;font-family:monospace;font-size:15px;font-weight:700;color:#f85149;">/gh-deploy</span>
-      </div>
-      <p style="font-size:13px;color:#6e7681;">Run these inside <strong style="color:#e6edf3;">Claude Code</strong> — they invoke the <code>gh</code> CLI and are not callable from the browser.</p>
+  </div>
+  <div class="card" style="margin-top:12px;padding:12px 18px;">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;"><div class="chip cp" style="margin:0;">Task 2</div><h3 style="margin:0;font-size:13px;">GitHub Skills</h3><span style="font-size:11px;color:var(--dim);margin-left:auto;">Run inside Claude Code only</span></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <span class="sbadge">/gh-status</span><span class="sbadge">/gh-test</span><span class="sbadge">/gh-lint</span><span class="sbadge dep">/gh-deploy</span>
     </div>
-
   </div>
 </div>
 
+<!-- 9: SUMMARY -->
+<div class="slide" id="s9">
+  <div class="chip cg">Summary</div>
+  <h2>Tech Stack</h2>
+  <div class="g2" style="margin-bottom:16px;">
+    <div class="card"><div class="chip cb" style="margin-bottom:7px;">Backend</div><div><span class="pill">Python 3.11</span><span class="pill">FastAPI</span><span class="pill">LiteLLM</span><span class="pill">Playwright</span><span class="pill">Pydantic v2</span><span class="pill">uvicorn</span><span class="pill">asyncio</span><span class="pill">uv</span></div></div>
+    <div class="card"><div class="chip co" style="margin-bottom:7px;">AI / CLI</div><div><span class="pill">Claude CLI</span><span class="pill">claude-sonnet-4-5</span><span class="pill">OpenAI tool_calls</span><span class="pill">stream-json</span><span class="pill">ANTHROPIC_API_KEY</span></div></div>
+    <div class="card"><div class="chip cp" style="margin-bottom:7px;">CI/CD &amp; Deploy</div><div><span class="pill">GitHub Actions</span><span class="pill">gh CLI</span><span class="pill">Docker</span><span class="pill">Zeabur</span><span class="pill">zeabur.yaml</span><span class="pill">Claude Code Skills</span></div></div>
+    <div class="card"><div class="chip cg" style="margin-bottom:7px;">Testing</div><div><span class="pill">pytest</span><span class="pill">pytest-asyncio</span><span class="pill">unittest.mock</span><span class="pill">httpx TestClient</span><span class="pill">73+ unit tests</span><span class="pill">@pytest.mark.integration</span></div></div>
+  </div>
+  <div class="card" style="background:var(--green-dim);border-color:rgba(52,201,116,0.3);">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:14px;">
+      <div>
+        <div style="font-size:19px;font-weight:800;font-family:'Syne',sans-serif;color:var(--green);margin-bottom:3px;">All three tasks complete ✓</div>
+        <div style="font-size:12.5px;color:var(--muted);">Strict TDD workflow · Zeabur deployment · GitHub CI/CD · Claude Skills symlinked</div>
+      </div>
+      <div style="display:flex;gap:18px;">
+        <div style="text-align:center;"><div style="font-size:28px;font-weight:800;font-family:'Syne',sans-serif;color:var(--green);">73+</div><div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;">Tests</div></div>
+        <div style="text-align:center;"><div style="font-size:28px;font-weight:800;font-family:'Syne',sans-serif;color:var(--green);">3</div><div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;">Services</div></div>
+        <div style="text-align:center;"><div style="font-size:28px;font-weight:800;font-family:'Syne',sans-serif;color:var(--green);">4</div><div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;">Skills</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /slides-wrap -->
+
 <script>
-  function cfg(id) { return document.getElementById(id).value.trim(); }
+const slideEls = Array.from(document.querySelectorAll('.slide'));
+const TOTAL = slideEls.length;
+let cur = 0, busy = false;
 
-  function showError(elId, msg) {
-    const el = document.getElementById(elId);
-    el.style.display = 'block';
-    el.style.color = '#f85149';
-    el.textContent = msg;
-  }
+// Build dots
+const dotsEl = document.getElementById('dots');
+for (let i = 0; i < TOTAL; i++) {
+  const d = document.createElement('div');
+  d.className = 'dot' + (i === 0 ? ' active' : '');
+  d.onclick = () => goTo(i);
+  dotsEl.appendChild(d);
+}
 
-  async function sendLiteLLM() {
-    const prompt = document.getElementById('t1-prompt').value.trim();
-    if (!prompt) return;
-    const btn = document.getElementById('t1-send');
-    const spinner = document.getElementById('t1-spinner');
-    const out = document.getElementById('t1-output');
-    btn.disabled = true;
-    spinner.style.display = 'inline';
-    out.style.display = 'none';
-    out.style.color = '#8b949e';
-    try {
-      const res = await fetch(cfg('cfg-litellm') + '/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + cfg('cfg-key'),
-        },
-        body: JSON.stringify({
-          model: 'claude-cli',
-          messages: [{ role: 'user', content: prompt }],
-        }),
-      });
-      if (!res.ok) {
-        const txt = await res.text();
-        showError('t1-output', 'HTTP ' + res.status + ': ' + txt);
-        return;
-      }
-      const data = await res.json();
-      const text = data?.choices?.[0]?.message?.content ?? JSON.stringify(data, null, 2);
-      out.textContent = text;
-      out.style.color = '#e6edf3';
-      out.style.display = 'block';
-    } catch (e) {
-      showError('t1-output', 'Fetch error: ' + e.message + '\n(Check CORS — the service must allow browser requests)');
-    } finally {
-      btn.disabled = false;
-      spinner.style.display = 'none';
+function getSlide(i) { return slideEls[i]; }
+
+function goTo(nxt) {
+  if (nxt === cur || busy || nxt < 0 || nxt >= TOTAL) return;
+  busy = true;
+  const dir = nxt > cur ? 1 : -1;
+  const from = getSlide(cur);
+  const to = getSlide(nxt);
+
+  from.classList.remove('active');
+  from.style.transform = dir > 0 ? 'translateX(-60px)' : 'translateX(60px)';
+  from.style.opacity = '0';
+
+  to.style.transition = 'none';
+  to.style.transform = dir > 0 ? 'translateX(60px)' : 'translateX(-60px)';
+  to.style.opacity = '0';
+
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    to.style.transition = '';
+    to.style.transform = 'translateX(0)';
+    to.style.opacity = '1';
+    to.classList.add('active');
+  }));
+
+  setTimeout(() => {
+    from.style.transform = '';
+    from.style.opacity = '';
+    from.style.transition = '';
+    busy = false;
+  }, 420);
+
+  cur = nxt;
+  ui();
+}
+
+function ui() {
+  document.getElementById('slide-counter').textContent = (cur + 1) + ' / ' + TOTAL;
+  document.getElementById('progress-bar').style.width = (cur / (TOTAL - 1) * 100) + '%';
+  document.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('active', i === cur));
+  document.getElementById('btn-prev').disabled = cur === 0;
+  document.getElementById('btn-next').disabled = cur === TOTAL - 1;
+}
+
+function next() { goTo(cur + 1); }
+function prev() { goTo(cur - 1); }
+
+document.addEventListener('keydown', e => {
+  if (e.target.tagName === 'TEXTAREA' || e.target.tagName === 'INPUT') return;
+  if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'ArrowDown') { e.preventDefault(); next(); }
+  if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') { e.preventDefault(); prev(); }
+});
+
+ui();
+
+// ── Interactive Demo ──
+function cfg(id) { return document.getElementById(id).value.trim(); }
+function err(elId, msg) { const el = document.getElementById(elId); el.style.display='block'; el.style.color='var(--red)'; el.textContent=msg; }
+
+async function sendLiteLLM() {
+  const prompt = document.getElementById('t1-prompt').value.trim();
+  if (!prompt) return;
+  const btn = document.getElementById('t1-send'), spin = document.getElementById('t1-spin'), out = document.getElementById('t1-out');
+  btn.disabled = true; spin.style.display = 'inline'; out.style.display = 'none';
+  try {
+    const res = await fetch(cfg('cfg-litellm') + '/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + cfg('cfg-key') },
+      body: JSON.stringify({ model: 'claude-cli/claude-sonnet-4-5', messages: [{ role: 'user', content: prompt }] }),
+    });
+    if (!res.ok) { err('t1-out', 'HTTP ' + res.status + ': ' + await res.text()); return; }
+    const data = await res.json();
+    out.textContent = data?.choices?.[0]?.message?.content ?? JSON.stringify(data, null, 2);
+    out.style.color = 'var(--text)'; out.style.display = 'block';
+  } catch (e) { err('t1-out', 'Fetch error: ' + e.message + '\n(Check CORS)'); }
+  finally { btn.disabled = false; spin.style.display = 'none'; }
+}
+
+async function runAgent() {
+  const task = document.getElementById('t3-task').value.trim();
+  if (!task) return;
+  const btn = document.getElementById('t3-run'), spin = document.getElementById('t3-spin');
+  btn.disabled = true; spin.style.display = 'inline';
+  ['t3-status','t3-out','t3-logs-wrap'].forEach(id => document.getElementById(id).style.display = 'none');
+  try {
+    const res = await fetch(cfg('cfg-agent') + '/run-task', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + cfg('cfg-key') },
+      body: JSON.stringify({ task, max_steps: parseInt(document.getElementById('t3-steps').value) || 10 }),
+    });
+    const s = document.getElementById('t3-status');
+    if (!res.ok) {
+      s.innerHTML = '<span style="background:var(--red-dim);color:var(--red);padding:2px 9px;border-radius:9px;font-size:10px;font-weight:700;font-family:\'JetBrains Mono\',monospace;">ERROR</span>';
+      s.style.display = 'block';
+      err('t3-out', 'HTTP ' + res.status + ': ' + await res.text()); return;
     }
-  }
-
-  async function runAgent() {
-    const task = document.getElementById('t3-task').value.trim();
-    if (!task) return;
-    const btn = document.getElementById('t3-run');
-    const spinner = document.getElementById('t3-spinner');
-    btn.disabled = true;
-    spinner.style.display = 'inline';
-    document.getElementById('t3-status').style.display = 'none';
-    document.getElementById('t3-result').style.display = 'none';
-    document.getElementById('t3-logs-wrap').style.display = 'none';
-    try {
-      const res = await fetch(cfg('cfg-agent') + '/run-task', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + cfg('cfg-key'),
-        },
-        body: JSON.stringify({
-          task,
-          max_steps: parseInt(document.getElementById('t3-steps').value) || 10,
-        }),
-      });
-      if (!res.ok) {
-        const txt = await res.text();
-        const statusEl = document.getElementById('t3-status');
-        statusEl.innerHTML = '<span style="background:#3a1a1f;color:#f85149;padding:4px 12px;border-radius:12px;font-size:12px;font-weight:700;">ERROR</span>';
-        statusEl.style.display = 'block';
-        document.getElementById('t3-result').textContent = 'HTTP ' + res.status + ': ' + txt;
-        document.getElementById('t3-result').style.color = '#f85149';
-        document.getElementById('t3-result').style.display = 'block';
-        return;
-      }
-      const data = await res.json();
-      // Status badge
-      const statusEl = document.getElementById('t3-status');
-      const statusColor = data.status === 'completed' ? '#3fb950' : '#f85149';
-      const statusBg   = data.status === 'completed' ? '#0a1f0a' : '#3a1a1f';
-      statusEl.innerHTML = `<span style="background:${statusBg};color:${statusColor};padding:4px 12px;border-radius:12px;font-size:12px;font-weight:700;text-transform:uppercase;">${data.status ?? 'unknown'}</span>` +
-        (data.steps_taken ? `<span style="margin-left:10px;font-size:12px;color:#6e7681;">${data.steps_taken} step(s)</span>` : '');
-      statusEl.style.display = 'block';
-      // Result
-      const resultEl = document.getElementById('t3-result');
-      resultEl.textContent = data.result ?? JSON.stringify(data, null, 2);
-      resultEl.style.color = '#e6edf3';
-      resultEl.style.display = 'block';
-      // Logs
-      if (Array.isArray(data.logs) && data.logs.length) {
-        const tbody = document.getElementById('t3-logs-body');
-        tbody.innerHTML = data.logs.map(l => `
-          <tr style="border-bottom:1px solid #21262d;">
-            <td style="padding:6px 10px;color:#8b949e;">${l.step ?? ''}</td>
-            <td style="padding:6px 10px;color:#bc8cff;">${l.action ?? ''}</td>
-            <td style="padding:6px 10px;color:#8b949e;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${JSON.stringify(l.input??'').replace(/"/g,'&quot;')}">${JSON.stringify(l.input ?? '')}</td>
-            <td style="padding:6px 10px;color:#8b949e;max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${String(l.output??'').replace(/"/g,'&quot;')}">${String(l.output ?? '').slice(0, 120)}</td>
-          </tr>`).join('');
-        document.getElementById('t3-logs-wrap').style.display = 'block';
-      }
-    } catch (e) {
-      const statusEl = document.getElementById('t3-status');
-      statusEl.innerHTML = '<span style="background:#3a1a1f;color:#f85149;padding:4px 12px;border-radius:12px;font-size:12px;font-weight:700;">FETCH ERROR</span>';
-      statusEl.style.display = 'block';
-      const resultEl = document.getElementById('t3-result');
-      resultEl.textContent = e.message + '\n(Check CORS — the service must allow browser requests)';
-      resultEl.style.color = '#f85149';
-      resultEl.style.display = 'block';
-    } finally {
-      btn.disabled = false;
-      spinner.style.display = 'none';
+    const data = await res.json();
+    const ok = data.status === 'completed';
+    s.innerHTML = `<span style="background:${ok?'var(--green-dim)':'var(--red-dim)'};color:${ok?'var(--green)':'var(--red)'};padding:2px 9px;border-radius:9px;font-size:10px;font-weight:700;font-family:'JetBrains Mono',monospace;text-transform:uppercase;">${data.status??'unknown'}</span>` +
+      (data.steps_taken?`<span style="margin-left:7px;font-size:10px;color:var(--dim);">${data.steps_taken} step(s)</span>`:'');
+    s.style.display = 'block';
+    const out = document.getElementById('t3-out');
+    out.textContent = data.result ?? JSON.stringify(data, null, 2);
+    out.style.color = 'var(--text)'; out.style.display = 'block';
+    if (Array.isArray(data.logs) && data.logs.length) {
+      document.getElementById('t3-logs-body').innerHTML = data.logs.map(l => `
+        <tr style="border-bottom:1px solid var(--border);">
+          <td style="padding:4px 7px;color:var(--muted);">${l.step??''}</td>
+          <td style="padding:4px 7px;color:var(--purple);">${l.action??''}</td>
+          <td style="padding:4px 7px;color:var(--muted);max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${JSON.stringify(l.input??'')}</td>
+          <td style="padding:4px 7px;color:var(--muted);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${String(l.output??'').slice(0,90)}</td>
+        </tr>`).join('');
+      document.getElementById('t3-logs-wrap').style.display = 'block';
     }
+  } catch (e) {
+    const s = document.getElementById('t3-status');
+    s.innerHTML = '<span style="background:var(--red-dim);color:var(--red);padding:2px 9px;border-radius:9px;font-size:10px;font-weight:700;font-family:\'JetBrains Mono\',monospace;">FETCH ERROR</span>';
+    s.style.display = 'block';
+    err('t3-out', e.message + '\n(Check CORS)');
   }
-
-  // Allow Enter (without shift) in prompt textarea to submit
-  document.getElementById('t1-prompt').addEventListener('keydown', e => {
-    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendLiteLLM(); }
-  });
+  finally { btn.disabled = false; spin.style.display = 'none'; }
+}
 </script>
-
 </body>
 </html>
