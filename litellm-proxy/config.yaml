@@ -1,5 +1,6 @@
 general_settings:
   master_key: "os.environ/LITELLM_MASTER_KEY"
+  allow_origins: ["*"]
 
 litellm_settings:
   custom_provider_map:

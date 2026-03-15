@@ -1,0 +1,1010 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VICI Take-Home — Demo Presentation</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, monospace;
+    background: #0d1117;
+    color: #e6edf3;
+    line-height: 1.6;
+  }
+
+  .slide {
+    min-height: 100vh;
+    padding: 60px 80px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    border-bottom: 1px solid #21262d;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  /* Cover */
+  .slide-cover {
+    text-align: center;
+    background: linear-gradient(135deg, #0d1117 0%, #161b22 100%);
+  }
+  .slide-cover .badge {
+    display: inline-block;
+    background: #238636;
+    color: #fff;
+    padding: 4px 14px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 24px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+  .slide-cover h1 {
+    font-size: 56px;
+    font-weight: 700;
+    color: #f0f6fc;
+    margin-bottom: 16px;
+    line-height: 1.1;
+  }
+  .slide-cover .subtitle {
+    font-size: 22px;
+    color: #8b949e;
+    margin-bottom: 48px;
+  }
+  .cover-meta {
+    display: flex;
+    gap: 40px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  .cover-meta .item { text-align: center; }
+  .cover-meta .label {
+    font-size: 11px;
+    color: #6e7681;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 4px;
+  }
+  .cover-meta .value {
+    font-size: 18px;
+    color: #e6edf3;
+    font-weight: 600;
+  }
+
+  .slide-title {
+    font-size: 13px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: #388bfd;
+    margin-bottom: 12px;
+  }
+  h2 {
+    font-size: 36px;
+    font-weight: 700;
+    color: #f0f6fc;
+    margin-bottom: 32px;
+    line-height: 1.2;
+  }
+  h3 {
+    font-size: 18px;
+    font-weight: 600;
+    color: #e6edf3;
+    margin-bottom: 10px;
+  }
+
+  .card-grid { display: grid; gap: 20px; }
+  .card-grid-3 { grid-template-columns: repeat(3, 1fr); }
+  .card-grid-2 { grid-template-columns: repeat(2, 1fr); }
+  .card-grid-4 { grid-template-columns: repeat(4, 1fr); }
+
+  .card {
+    background: #161b22;
+    border: 1px solid #30363d;
+    border-radius: 10px;
+    padding: 24px;
+  }
+  .card .card-tag {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    padding: 2px 10px;
+    border-radius: 12px;
+    margin-bottom: 12px;
+  }
+  .tag-blue   { background: #1f3a5f; color: #388bfd; }
+  .tag-green  { background: #1a3a2a; color: #3fb950; }
+  .tag-purple { background: #2a1f4a; color: #bc8cff; }
+  .tag-orange { background: #3a2a1a; color: #ffa657; }
+
+  .card p   { font-size: 14px; color: #8b949e; line-height: 1.6; }
+  .card ul  { list-style: none; padding: 0; }
+  .card ul li {
+    font-size: 14px;
+    color: #8b949e;
+    padding: 3px 0 3px 16px;
+    position: relative;
+  }
+  .card ul li::before { content: '→'; position: absolute; left: 0; color: #388bfd; font-size: 12px; }
+
+  pre {
+    background: #010409;
+    border: 1px solid #30363d;
+    border-radius: 8px;
+    padding: 20px 24px;
+    font-size: 13px;
+    line-height: 1.7;
+    overflow-x: auto;
+    font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+  }
+  code { font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace; font-size: 13px; }
+  .kw  { color: #ff7b72; }
+  .str { color: #a5d6ff; }
+  .cm  { color: #8b949e; font-style: italic; }
+  .fn  { color: #d2a8ff; }
+  .num { color: #79c0ff; }
+
+  .flow {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin: 24px 0;
+  }
+  .flow-box {
+    background: #161b22;
+    border: 1px solid #30363d;
+    border-radius: 8px;
+    padding: 12px 20px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #e6edf3;
+    text-align: center;
+  }
+  .flow-arrow { color: #388bfd; font-size: 20px; font-weight: 700; }
+
+  .stat-row { display: flex; gap: 24px; margin: 24px 0; flex-wrap: wrap; }
+  .stat {
+    background: #161b22;
+    border: 1px solid #30363d;
+    border-radius: 8px;
+    padding: 20px 28px;
+    text-align: center;
+    flex: 1;
+    min-width: 120px;
+  }
+  .stat .num   { font-size: 36px; font-weight: 700; color: #388bfd; display: block; line-height: 1; margin-bottom: 6px; }
+  .stat .label { font-size: 12px; color: #6e7681; text-transform: uppercase; letter-spacing: 1px; }
+
+  .tdd-row { display: flex; gap: 0; margin: 12px 0; }
+  .tdd-commit {
+    flex: 1;
+    padding: 14px 18px;
+    font-size: 13px;
+    border: 1px solid #30363d;
+    border-right: none;
+  }
+  .tdd-commit:first-child { border-radius: 8px 0 0 8px; }
+  .tdd-commit:last-child  { border-right: 1px solid #30363d; border-radius: 0 8px 8px 0; }
+  .tdd-red   { background: #1f0a0a; border-color: #f85149; }
+  .tdd-green { background: #0a1f0a; border-color: #3fb950; }
+  .tdd-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+  .tdd-red   .tdd-label { color: #f85149; }
+  .tdd-green .tdd-label { color: #3fb950; }
+
+  .skill-card {
+    background: #161b22;
+    border: 1px solid #30363d;
+    border-radius: 10px;
+    padding: 20px;
+  }
+  .skill-card .cmd  { font-family: 'SF Mono','Fira Code',monospace; font-size: 16px; font-weight: 700; color: #bc8cff; margin-bottom: 8px; }
+  .skill-card .desc { font-size: 13px; color: #8b949e; margin-bottom: 12px; }
+  .skill-card .inp  { font-size: 12px; color: #6e7681; }
+
+  .tool-loop {
+    background: #161b22;
+    border: 1px solid #30363d;
+    border-radius: 10px;
+    padding: 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .tool-step { display: flex; align-items: flex-start; gap: 14px; }
+  .step-num {
+    width: 28px; height: 28px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700; flex-shrink: 0; margin-top: 2px;
+  }
+  .step-user   { background: #1f3a5f; color: #388bfd; }
+  .step-claude { background: #2a1f4a; color: #bc8cff; }
+  .step-tool   { background: #1a3a2a; color: #3fb950; }
+  .step-done   { background: #3a1a1f; color: #f85149; }
+  .step-title  { font-size: 13px; font-weight: 600; color: #e6edf3; margin-bottom: 3px; }
+  .step-detail { font-size: 12px; color: #6e7681; }
+
+  .demo-step { display: flex; gap: 20px; align-items: flex-start; margin-bottom: 28px; }
+  .demo-num {
+    width: 36px; height: 36px; border-radius: 50%;
+    background: #1f3a5f; border: 2px solid #388bfd;
+    color: #388bfd; font-size: 16px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .demo-body h3   { margin-bottom: 6px; font-size: 16px; }
+  .demo-body p    { font-size: 14px; color: #8b949e; }
+
+  .tech-pill {
+    display: inline-block;
+    background: #161b22;
+    border: 1px solid #30363d;
+    border-radius: 20px;
+    padding: 6px 16px;
+    font-size: 13px;
+    color: #8b949e;
+    margin: 4px;
+  }
+
+  hr { border: none; border-top: 1px solid #21262d; margin: 32px 0; }
+
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; align-items: start; }
+  .section-label {
+    font-size: 11px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 1.5px; color: #6e7681; margin-bottom: 16px;
+    display: block;
+  }
+
+  @media (max-width: 800px) {
+    .slide { padding: 40px 24px; }
+    .card-grid-3, .card-grid-4, .card-grid-2, .two-col { grid-template-columns: 1fr; }
+    h2 { font-size: 26px; }
+    .slide-cover h1 { font-size: 36px; }
+    .tdd-row { flex-direction: column; }
+    .tdd-commit { border-right: 1px solid #30363d; border-bottom: none; border-radius: 0; }
+    .tdd-commit:first-child { border-radius: 8px 8px 0 0; }
+    .tdd-commit:last-child  { border-bottom: 1px solid #30363d; border-radius: 0 0 8px 8px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ===== COVER ===== -->
+<div class="slide slide-cover">
+  <div>
+    <div class="badge">VICI Take-Home</div>
+    <h1>AI Agent Platform</h1>
+    <p class="subtitle">Three tasks: CLI proxy &nbsp;·&nbsp; CI/CD skills &nbsp;·&nbsp; Browser automation</p>
+    <div class="cover-meta">
+      <div class="item"><div class="label">Tasks</div><div class="value">3</div></div>
+      <div class="item"><div class="label">Unit Tests</div><div class="value">60+</div></div>
+      <div class="item"><div class="label">Workflow</div><div class="value">Strict TDD</div></div>
+      <div class="item"><div class="label">Deploy</div><div class="value">Zeabur</div></div>
+      <div class="item"><div class="label">Date</div><div class="value">Mar 2026</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== ARCHITECTURE ===== -->
+<div class="slide">
+  <div class="slide-title">Overview</div>
+  <h2>Architecture</h2>
+  <p style="color:#8b949e;font-size:15px;margin-bottom:32px;">
+    Three independent but interconnected services — each deployed on Zeabur, wired together via HTTP.
+  </p>
+
+  <div class="flow">
+    <div class="flow-box" style="border-color:#bc8cff;">
+      <div style="font-size:11px;color:#bc8cff;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">Task 2</div>
+      GitHub Skills<br><span style="font-size:12px;color:#6e7681;">/gh-test · /gh-lint<br>/gh-deploy · /gh-status</span>
+    </div>
+    <div class="flow-arrow">↕</div>
+    <div class="flow-box" style="border-color:#ffa657;">
+      <div style="font-size:11px;color:#ffa657;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">GitHub Actions</div>
+      test.yml · lint.yml<br><span style="font-size:12px;color:#6e7681;">deploy.yml</span>
+    </div>
+    <div style="flex:1"></div>
+    <div class="flow-box" style="border-color:#3fb950;">
+      <div style="font-size:11px;color:#3fb950;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">Task 3</div>
+      Browser Agent<br><span style="font-size:12px;color:#6e7681;">POST /run-task</span>
+    </div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-box" style="border-color:#388bfd;">
+      <div style="font-size:11px;color:#388bfd;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">Task 1</div>
+      LiteLLM Proxy<br><span style="font-size:12px;color:#6e7681;">POST /v1/chat/completions</span>
+    </div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-box" style="border-color:#f85149;">
+      <div style="font-size:11px;color:#f85149;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">Anthropic</div>
+      Claude CLI<br><span style="font-size:12px;color:#6e7681;">claude -p "..."</span>
+    </div>
+  </div>
+
+  <div class="card-grid card-grid-3" style="margin-top:24px;">
+    <div class="card">
+      <div class="card-tag tag-blue">Task 1 · litellm-proxy</div>
+      <h3>OpenAI-compatible API</h3>
+      <ul>
+        <li>Wraps <code>claude</code> CLI as LiteLLM CustomLLM</li>
+        <li>Streaming + non-streaming</li>
+        <li>Tool-use via system prompt injection</li>
+        <li>Port 8080 on Zeabur</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="card-tag tag-purple">Task 2 · github-skills</div>
+      <h3>Claude Code Skills</h3>
+      <ul>
+        <li>4 skills backed by <code>gh</code> CLI</li>
+        <li>Symlinked into <code>.claude/commands/</code></li>
+        <li>CONFIRM gate on deploy</li>
+        <li>Skill validator with safety check</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="card-tag tag-green">Task 3 · browser-agent</div>
+      <h3>Autonomous Browser</h3>
+      <ul>
+        <li>FastAPI + Playwright + Claude tool loop</li>
+        <li>6 browser tools, up to 50 steps</li>
+        <li>Full step logs in response</li>
+        <li>Calls Task 1 proxy for LLM</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ===== TASK 1 ===== -->
+<div class="slide">
+  <div class="slide-title">Task 1</div>
+  <h2>LiteLLM Proxy — Claude CLI as an API</h2>
+
+  <div class="two-col">
+    <div>
+      <span class="section-label">What it does</span>
+      <p style="color:#8b949e;font-size:15px;margin-bottom:20px;">
+        Bridges the <code>claude</code> CLI tool into an <strong style="color:#e6edf3;">OpenAI-compatible</strong> endpoint.
+        Any client that speaks OpenAI can use Claude — no SDK changes needed.
+      </p>
+
+      <div class="flow" style="margin:0 0 20px;">
+        <div class="flow-box" style="font-size:13px;">OpenAI request</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-box" style="font-size:13px;border-color:#388bfd;">LiteLLM CustomLLM</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-box" style="font-size:13px;border-color:#f85149;"><code>claude -p</code></div>
+      </div>
+
+      <span class="section-label">Key implementation details</span>
+      <ul style="list-style:none;padding:0;">
+        <li style="font-size:14px;color:#8b949e;padding:4px 0 4px 16px;position:relative;"><span style="position:absolute;left:0;color:#388bfd;">→</span><code>ClaudeCLIProvider(CustomLLM)</code> in <code>custom_handler.py</code></li>
+        <li style="font-size:14px;color:#8b949e;padding:4px 0 4px 16px;position:relative;"><span style="position:absolute;left:0;color:#388bfd;">→</span><code>acompletion()</code> + <code>astreaming()</code> async methods</li>
+        <li style="font-size:14px;color:#8b949e;padding:4px 0 4px 16px;position:relative;"><span style="position:absolute;left:0;color:#388bfd;">→</span>Multi-turn history → <code>Human: …\nAssistant: …</code></li>
+        <li style="font-size:14px;color:#8b949e;padding:4px 0 4px 16px;position:relative;"><span style="position:absolute;left:0;color:#388bfd;">→</span>Tools serialised into <code>--system-prompt</code>, JSON parsed back</li>
+        <li style="font-size:14px;color:#8b949e;padding:4px 0 4px 16px;position:relative;"><span style="position:absolute;left:0;color:#388bfd;">→</span><code>_SUBPROCESS_ENV = dict(os.environ)</code> — avoids uvloop <code>_Environ</code> rejection</li>
+        <li style="font-size:14px;color:#8b949e;padding:4px 0 4px 16px;position:relative;"><span style="position:absolute;left:0;color:#388bfd;">→</span>120-second timeout for Claude CLI subprocess</li>
+      </ul>
+    </div>
+
+    <div>
+      <span class="section-label">Demo — curl</span>
+<pre><code><span class="cm"># Non-streaming</span>
+curl -X POST https://litellm-proxy.zeabur.app \
+     /v1/chat/completions \
+  -H <span class="str">"Authorization: Bearer $KEY"</span> \
+  -H <span class="str">"Content-Type: application/json"</span> \
+  -d <span class="str">'{
+    "model": "claude-cli/claude-sonnet-4-5",
+    "messages": [
+      {"role":"user","content":"Hello"}
+    ]
+  }'</span>
+
+<span class="cm"># Streaming — returns SSE chunks</span>
+curl ... -d <span class="str">'{..., "stream": true}'</span>
+
+<span class="cm"># Tool use</span>
+curl ... -d <span class="str">'{
+  ...,
+  "tools": [{
+    "type": "function",
+    "function": {
+      "name": "get_weather",
+      "description": "Get current weather",
+      "parameters": { ... }
+    }
+  }]
+}'</span>
+</code></pre>
+    </div>
+  </div>
+</div>
+
+<!-- ===== TASK 2 ===== -->
+<div class="slide">
+  <div class="slide-title">Task 2</div>
+  <h2>GitHub Skills — CI/CD as Claude Commands</h2>
+
+  <p style="color:#8b949e;font-size:15px;margin-bottom:28px;">
+    Four <code>.md</code> skill files in <code>github-skills/skills/</code>, symlinked into <code>.claude/commands/</code>.
+    Invoke directly from Claude Code — no copy-paste, no context switching.
+  </p>
+
+  <div class="card-grid card-grid-4" style="margin-bottom:32px;">
+    <div class="skill-card">
+      <div class="cmd">/gh-status</div>
+      <div class="desc">List recent workflow runs. Read-only — safe to call any time.</div>
+      <div class="inp">repo (required) · limit (default: 10)</div>
+    </div>
+    <div class="skill-card">
+      <div class="cmd">/gh-test</div>
+      <div class="desc">Trigger <code>test.yml</code>, poll until complete, return pass/fail + URL.</div>
+      <div class="inp">repo (required) · branch (default: main)</div>
+    </div>
+    <div class="skill-card">
+      <div class="cmd">/gh-lint</div>
+      <div class="desc">Trigger <code>lint.yml</code>, poll with 10 s intervals (max 5 min).</div>
+      <div class="inp">repo (required) · branch (default: main)</div>
+    </div>
+    <div class="skill-card" style="border-color:#f85149;">
+      <div class="cmd" style="color:#f85149;">/gh-deploy</div>
+      <div class="desc">Deploy with <strong style="color:#f85149;">mandatory CONFIRM gate</strong>. Auto-detects repo &amp; changed service.</div>
+      <div class="inp">repo · branch · environment · service</div>
+    </div>
+  </div>
+
+  <div class="two-col">
+    <div>
+      <span class="section-label">Safety design</span>
+      <div class="card">
+        <ul>
+          <li>Deploy skill requires user to type <code>CONFIRM</code> before dispatch</li>
+          <li>Validator warns on embedded credentials / Bearer tokens</li>
+          <li><code>validator.py</code> enforces schema: name, description, version, inputs, outputs</li>
+          <li><code>test_all_skills_valid()</code> runs in CI — all 4 skill files must pass</li>
+        </ul>
+      </div>
+    </div>
+    <div>
+      <span class="section-label">Auto-detect in /gh-deploy</span>
+<pre><code><span class="cm"># Detect repo from git remote</span>
+git remote get-url origin
+<span class="cm"># → https://github.com/user/repo.git
+#   or git@github.com:user/repo.git</span>
+
+<span class="cm"># Detect changed service from diff</span>
+git diff --name-only HEAD~1
+<span class="cm"># litellm-proxy/** → service=litellm-proxy
+# browser-agent/** → service=browser-agent
+# both / neither   → service=all</span>
+</code></pre>
+    </div>
+  </div>
+
+  <div style="margin-top:24px;">
+    <span class="section-label">Symlink installation — skills auto-sync when edited</span>
+<pre><code>ln -s ../github-skills/skills .claude/commands</code></pre>
+  </div>
+</div>
+
+<!-- ===== TASK 3 ===== -->
+<div class="slide">
+  <div class="slide-title">Task 3</div>
+  <h2>Browser Agent — Natural Language → Web Actions</h2>
+
+  <div class="two-col" style="margin-bottom:32px;">
+    <div>
+      <span class="section-label">Tool-use loop</span>
+      <div class="tool-loop">
+        <div class="tool-step">
+          <div class="step-num step-user">U</div>
+          <div>
+            <div class="step-title">POST /run-task</div>
+            <div class="step-detail">{"task": "What is the latest Python release?"}</div>
+          </div>
+        </div>
+        <div class="tool-step">
+          <div class="step-num step-claude">C</div>
+          <div>
+            <div class="step-title">Claude decides: call browser_search</div>
+            <div class="step-detail">tool_calls → {name: "browser_search", args: {query: "..."}}</div>
+          </div>
+        </div>
+        <div class="tool-step">
+          <div class="step-num step-tool">T</div>
+          <div>
+            <div class="step-title">Execute: DuckDuckGo search</div>
+            <div class="step-detail">Result added back to conversation as tool message</div>
+          </div>
+        </div>
+        <div class="tool-step">
+          <div class="step-num step-claude">C</div>
+          <div>
+            <div class="step-title">Claude decides: navigate + extract_text</div>
+            <div class="step-detail">Reads python.org/downloads page body (&le;8 000 chars)</div>
+          </div>
+        </div>
+        <div class="tool-step">
+          <div class="step-num step-done">✓</div>
+          <div>
+            <div class="step-title">Claude calls done(answer)</div>
+            <div class="step-detail">Loop exits immediately — returns final answer + full logs</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <span class="section-label">6 browser tools</span>
+      <div class="card" style="margin-bottom:16px;">
+        <ul>
+          <li><code>browser_search(query)</code> — DuckDuckGo HTML (no API key)</li>
+          <li><code>navigate(url)</code> — Playwright goto, returns title</li>
+          <li><code>extract_text()</code> — page body ≤ 8 000 chars</li>
+          <li><code>click(selector)</code> — Playwright click</li>
+          <li><code>type_text(selector, text)</code> — Playwright fill</li>
+          <li><code>done(answer)</code> — terminates loop with result</li>
+        </ul>
+      </div>
+      <span class="section-label">POST /run-task response</span>
+<pre><code>{
+  <span class="str">"task_id"</span>: <span class="str">"uuid"</span>,
+  <span class="str">"status"</span>: <span class="str">"completed"</span>,
+  <span class="str">"result"</span>: <span class="str">"Python 3.13.2 released..."</span>,
+  <span class="str">"steps_taken"</span>: <span class="num">3</span>,
+  <span class="str">"logs"</span>: [{
+    <span class="str">"step"</span>: <span class="num">1</span>,
+    <span class="str">"action"</span>: <span class="str">"browser_search"</span>,
+    <span class="str">"input"</span>: {<span class="str">"query"</span>: <span class="str">"..."</span>},
+    <span class="str">"output"</span>: <span class="str">"..."</span>,
+    <span class="str">"timestamp"</span>: <span class="str">"2026-03-15T..."</span>
+  }]
+}</code></pre>
+    </div>
+  </div>
+</div>
+
+<!-- ===== TDD ===== -->
+<div class="slide">
+  <div class="slide-title">Quality</div>
+  <h2>TDD Evidence — Red &rarr; Green</h2>
+
+  <div class="stat-row">
+    <div class="stat"><span class="num">60+</span><div class="label">Unit Tests</div></div>
+    <div class="stat"><span class="num">23</span><div class="label">Task 1</div></div>
+    <div class="stat"><span class="num">11</span><div class="label">Task 2</div></div>
+    <div class="stat"><span class="num">26</span><div class="label">Task 3</div></div>
+    <div class="stat"><span class="num">7</span><div class="label">Integration</div></div>
+  </div>
+
+  <span class="section-label" style="margin-top:8px;">Actual git commit pairs</span>
+
+  <div class="tdd-row">
+    <div class="tdd-commit tdd-red">
+      <div class="tdd-label">🔴 Failing test</div>
+      <code>test(task1): add failing test for simple user message assembly</code>
+    </div>
+    <div class="tdd-commit tdd-green">
+      <div class="tdd-label">🟢 Implementation</div>
+      <code>feat(task1): implement assemble_prompt for simple user message</code>
+    </div>
+  </div>
+
+  <div class="tdd-row">
+    <div class="tdd-commit tdd-red">
+      <div class="tdd-label">🔴 Failing test</div>
+      <code>test(task1): add failing tests for CLI command builder</code>
+    </div>
+    <div class="tdd-commit tdd-green">
+      <div class="tdd-label">🟢 Implementation</div>
+      <code>feat(task1): implement _build_cmd for claude CLI invocation</code>
+    </div>
+  </div>
+
+  <div class="tdd-row">
+    <div class="tdd-commit tdd-red">
+      <div class="tdd-label">🔴 Failing test</div>
+      <code>test(task1): add failing test for astreaming yields text chunks</code>
+    </div>
+    <div class="tdd-commit tdd-green">
+      <div class="tdd-label">🟢 Implementation</div>
+      <code>feat(task1): implement astreaming with JSON line parsing</code>
+    </div>
+  </div>
+
+  <div class="tdd-row">
+    <div class="tdd-commit tdd-red">
+      <div class="tdd-label">🔴 Failing test</div>
+      <code>test(task2): add failing tests for load_frontmatter, check_required_fields, check_safe_boundary</code>
+    </div>
+    <div class="tdd-commit tdd-green">
+      <div class="tdd-label">🟢 Implementation</div>
+      <code>feat(task2): implement load_frontmatter, check_required_fields, validate_skill</code>
+    </div>
+  </div>
+
+  <div class="tdd-row">
+    <div class="tdd-commit tdd-red">
+      <div class="tdd-label">🔴 Failing test</div>
+      <code>test(task2): add failing test that all skill files pass validate_skill</code>
+    </div>
+    <div class="tdd-commit tdd-green">
+      <div class="tdd-label">🟢 Implementation</div>
+      <code>feat(task2): add skill markdown files (gh-lint, gh-test, gh-deploy, gh-status)</code>
+    </div>
+  </div>
+
+  <hr>
+  <span class="section-label">Run commands</span>
+<pre><code><span class="cm"># Unit tests only — no external services required</span>
+cd task1 &amp;&amp; uv run pytest tests/ -v -m <span class="str">"not integration"</span>
+cd task2 &amp;&amp; uv run pytest tests/ -v
+cd task3 &amp;&amp; uv run pytest tests/ -v -m <span class="str">"not integration"</span>
+
+<span class="cm"># Integration tests — require running services</span>
+uv run pytest tests/ -v -m integration</code></pre>
+</div>
+
+<!-- ===== LIVE DEMO ===== -->
+<div class="slide">
+  <div class="slide-title">Walkthrough</div>
+  <h2>Suggested Live Demo Flow</h2>
+
+  <div class="demo-step">
+    <div class="demo-num">1</div>
+    <div class="demo-body">
+      <h3>Unit tests passing</h3>
+      <p><code>cd task1 &amp;&amp; uv run pytest tests/ -v -m "not integration"</code> — all green, no network required. Repeat for task2 and task3.</p>
+    </div>
+  </div>
+
+  <div class="demo-step">
+    <div class="demo-num">2</div>
+    <div class="demo-body">
+      <h3>Task 1: curl the LiteLLM proxy</h3>
+      <p>POST /v1/chat/completions with a simple message. Then <code>"stream":true</code> to show SSE chunks arrive line by line. Then with a <code>tools</code> array to show JSON tool_call parsing round-trip.</p>
+    </div>
+  </div>
+
+  <div class="demo-step">
+    <div class="demo-num">3</div>
+    <div class="demo-body">
+      <h3>Task 2: run skills from Claude Code</h3>
+      <p><code>/gh-status laiyanru/claude-agent-platform</code> — lists recent CI runs instantly.<br>
+         <code>/gh-test laiyanru/claude-agent-platform</code> — triggers workflow, polls, shows result URL.<br>
+         Show <code>/gh-deploy</code> prompt requiring <code>CONFIRM</code> before any dispatch.</p>
+    </div>
+  </div>
+
+  <div class="demo-step">
+    <div class="demo-num">4</div>
+    <div class="demo-body">
+      <h3>Task 3: browser agent end-to-end</h3>
+      <p>POST /run-task with <code>"task":"What is the current Python stable version?"</code>.<br>
+         Observe <code>logs[]</code> array showing each browser_search → navigate → extract_text → done step with timestamps.</p>
+    </div>
+  </div>
+
+  <div class="demo-step">
+    <div class="demo-num">5</div>
+    <div class="demo-body">
+      <h3>TDD git log</h3>
+      <p><code>git log --oneline</code> — alternating <code>test(…):</code> / <code>feat(…):</code> commit pairs. Each feature has a red commit before the green one. No test + implementation bundled in the same commit.</p>
+    </div>
+  </div>
+
+  <div class="demo-step">
+    <div class="demo-num">6</div>
+    <div class="demo-body">
+      <h3>Architecture tie-together</h3>
+      <p>Browser agent → litellm-proxy → claude CLI → Anthropic.<br>
+         GitHub Skills → gh CLI → GitHub Actions → Zeabur deploy.<br>
+         Single <code>ANTHROPIC_API_KEY</code> flows through both chains.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ===== TECH STACK ===== -->
+<div class="slide">
+  <div class="slide-title">Summary</div>
+  <h2>Tech Stack</h2>
+
+  <div class="card-grid card-grid-2" style="margin-bottom:32px;">
+    <div class="card">
+      <div class="card-tag tag-blue">Backend</div>
+      <div style="margin-top:8px;">
+        <span class="tech-pill">Python 3.11</span>
+        <span class="tech-pill">FastAPI</span>
+        <span class="tech-pill">LiteLLM</span>
+        <span class="tech-pill">Playwright</span>
+        <span class="tech-pill">Pydantic v2</span>
+        <span class="tech-pill">uvicorn</span>
+        <span class="tech-pill">asyncio</span>
+        <span class="tech-pill">uv</span>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-tag tag-orange">AI / CLI</div>
+      <div style="margin-top:8px;">
+        <span class="tech-pill">Claude CLI</span>
+        <span class="tech-pill">claude-sonnet-4-5</span>
+        <span class="tech-pill">OpenAI tool_calls format</span>
+        <span class="tech-pill">stream-json</span>
+        <span class="tech-pill">ANTHROPIC_API_KEY</span>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-tag tag-purple">CI/CD &amp; Deploy</div>
+      <div style="margin-top:8px;">
+        <span class="tech-pill">GitHub Actions</span>
+        <span class="tech-pill">gh CLI</span>
+        <span class="tech-pill">Docker</span>
+        <span class="tech-pill">Zeabur</span>
+        <span class="tech-pill">zeabur.yaml</span>
+        <span class="tech-pill">Claude Code Skills</span>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-tag tag-green">Testing</div>
+      <div style="margin-top:8px;">
+        <span class="tech-pill">pytest</span>
+        <span class="tech-pill">pytest-asyncio</span>
+        <span class="tech-pill">unittest.mock</span>
+        <span class="tech-pill">httpx TestClient</span>
+        <span class="tech-pill">60+ unit tests</span>
+        <span class="tech-pill">@pytest.mark.integration</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="background:#0d1117;border-color:#238636;">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px;">
+      <div>
+        <div style="font-size:20px;font-weight:700;color:#3fb950;margin-bottom:4px;">All three tasks complete</div>
+        <div style="font-size:14px;color:#8b949e;">Strict TDD workflow &nbsp;·&nbsp; Zeabur deployment &nbsp;·&nbsp; GitHub CI/CD &nbsp;·&nbsp; Claude Skills symlinked</div>
+      </div>
+      <div style="display:flex;gap:24px;">
+        <div style="text-align:center;">
+          <div style="font-size:32px;font-weight:700;color:#3fb950;">60+</div>
+          <div style="font-size:11px;color:#6e7681;text-transform:uppercase;">Tests</div>
+        </div>
+        <div style="text-align:center;">
+          <div style="font-size:32px;font-weight:700;color:#3fb950;">3</div>
+          <div style="font-size:11px;color:#6e7681;text-transform:uppercase;">Services</div>
+        </div>
+        <div style="font-size:36px;color:#3fb950;display:flex;align-items:center;">&#10003;</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ===== INTERACTIVE DEMO ===== -->
+<div class="slide" id="slide-demo" style="justify-content:flex-start;padding-top:60px;">
+  <div class="slide-title">Live</div>
+  <h2>Interactive Demo</h2>
+
+  <!-- Config bar -->
+  <div style="background:#161b22;border:1px solid #30363d;border-radius:10px;padding:18px 24px;margin-bottom:28px;display:flex;gap:16px;flex-wrap:wrap;align-items:flex-end;">
+    <div style="flex:2;min-width:200px;">
+      <label style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:#6e7681;display:block;margin-bottom:6px;">LiteLLM Proxy URL</label>
+      <input id="cfg-litellm" type="text" value="https://litellm-proxy.zeabur.app"
+        style="width:100%;background:#0d1117;border:1px solid #30363d;border-radius:6px;padding:8px 12px;color:#e6edf3;font-size:13px;font-family:monospace;">
+    </div>
+    <div style="flex:2;min-width:200px;">
+      <label style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:#6e7681;display:block;margin-bottom:6px;">Browser Agent URL</label>
+      <input id="cfg-agent" type="text" value="https://browser-agent.zeabur.app"
+        style="width:100%;background:#0d1117;border:1px solid #30363d;border-radius:6px;padding:8px 12px;color:#e6edf3;font-size:13px;font-family:monospace;">
+    </div>
+    <div style="flex:2;min-width:200px;">
+      <label style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:#6e7681;display:block;margin-bottom:6px;">Master Key</label>
+      <input id="cfg-key" type="password" placeholder="sk-…"
+        style="width:100%;background:#0d1117;border:1px solid #30363d;border-radius:6px;padding:8px 12px;color:#e6edf3;font-size:13px;font-family:monospace;">
+    </div>
+  </div>
+
+  <div class="card-grid card-grid-2" style="gap:20px;">
+
+    <!-- Panel 1: LiteLLM Proxy -->
+    <div class="card" style="display:flex;flex-direction:column;gap:14px;">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div class="card-tag tag-blue" style="margin:0;">Task 1</div>
+        <h3 style="margin:0;font-size:16px;">LiteLLM Proxy</h3>
+      </div>
+      <textarea id="t1-prompt" rows="4" placeholder="Enter prompt…"
+        style="background:#0d1117;border:1px solid #30363d;border-radius:6px;padding:10px 12px;color:#e6edf3;font-size:13px;font-family:inherit;resize:vertical;width:100%;"></textarea>
+      <div style="display:flex;gap:10px;align-items:center;">
+        <button id="t1-send" onclick="sendLiteLLM()"
+          style="background:#238636;border:none;border-radius:6px;padding:8px 20px;color:#fff;font-size:13px;font-weight:600;cursor:pointer;">Send</button>
+        <span id="t1-spinner" style="display:none;color:#8b949e;font-size:13px;">⏳ waiting…</span>
+      </div>
+      <div id="t1-output" style="background:#010409;border:1px solid #30363d;border-radius:6px;padding:14px;font-size:13px;color:#8b949e;min-height:80px;white-space:pre-wrap;font-family:monospace;display:none;"></div>
+    </div>
+
+    <!-- Panel 2: Browser Agent -->
+    <div class="card" style="display:flex;flex-direction:column;gap:14px;">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div class="card-tag tag-green" style="margin:0;">Task 3</div>
+        <h3 style="margin:0;font-size:16px;">Browser Agent</h3>
+      </div>
+      <textarea id="t3-task" rows="4" placeholder="Describe a browsing task…"
+        style="background:#0d1117;border:1px solid #30363d;border-radius:6px;padding:10px 12px;color:#e6edf3;font-size:13px;font-family:inherit;resize:vertical;width:100%;"></textarea>
+      <div style="display:flex;gap:10px;align-items:center;">
+        <label style="font-size:12px;color:#8b949e;">max_steps</label>
+        <input id="t3-steps" type="number" value="10" min="1" max="50"
+          style="width:60px;background:#0d1117;border:1px solid #30363d;border-radius:6px;padding:6px 8px;color:#e6edf3;font-size:13px;text-align:center;">
+        <button id="t3-run" onclick="runAgent()"
+          style="background:#1a7f37;border:none;border-radius:6px;padding:8px 20px;color:#fff;font-size:13px;font-weight:600;cursor:pointer;">Run</button>
+        <span id="t3-spinner" style="display:none;color:#8b949e;font-size:13px;">⏳ running…</span>
+      </div>
+      <div id="t3-status" style="display:none;margin-bottom:4px;"></div>
+      <div id="t3-result" style="background:#010409;border:1px solid #30363d;border-radius:6px;padding:14px;font-size:13px;color:#8b949e;white-space:pre-wrap;font-family:monospace;display:none;"></div>
+      <details id="t3-logs-wrap" style="display:none;">
+        <summary style="cursor:pointer;font-size:12px;color:#6e7681;padding:6px 0;">Step logs</summary>
+        <div style="overflow-x:auto;margin-top:8px;">
+          <table id="t3-logs-table" style="width:100%;border-collapse:collapse;font-size:12px;font-family:monospace;">
+            <thead>
+              <tr style="color:#6e7681;text-align:left;border-bottom:1px solid #30363d;">
+                <th style="padding:6px 10px;">Step</th>
+                <th style="padding:6px 10px;">Action</th>
+                <th style="padding:6px 10px;">Input</th>
+                <th style="padding:6px 10px;">Output</th>
+              </tr>
+            </thead>
+            <tbody id="t3-logs-body"></tbody>
+          </table>
+        </div>
+      </details>
+    </div>
+
+    <!-- Panel 3: GitHub Skills (read-only) -->
+    <div class="card card-grid-2" style="grid-column:1/-1;">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+        <div class="card-tag tag-purple" style="margin:0;">Task 2</div>
+        <h3 style="margin:0;font-size:16px;">GitHub Skills</h3>
+      </div>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px;">
+        <span style="background:#2a1f4a;border:1px solid #bc8cff;border-radius:8px;padding:8px 18px;font-family:monospace;font-size:15px;font-weight:700;color:#bc8cff;">/gh-status</span>
+        <span style="background:#2a1f4a;border:1px solid #bc8cff;border-radius:8px;padding:8px 18px;font-family:monospace;font-size:15px;font-weight:700;color:#bc8cff;">/gh-test</span>
+        <span style="background:#2a1f4a;border:1px solid #bc8cff;border-radius:8px;padding:8px 18px;font-family:monospace;font-size:15px;font-weight:700;color:#bc8cff;">/gh-lint</span>
+        <span style="background:#3a1a1f;border:1px solid #f85149;border-radius:8px;padding:8px 18px;font-family:monospace;font-size:15px;font-weight:700;color:#f85149;">/gh-deploy</span>
+      </div>
+      <p style="font-size:13px;color:#6e7681;">Run these inside <strong style="color:#e6edf3;">Claude Code</strong> — they invoke the <code>gh</code> CLI and are not callable from the browser.</p>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  function cfg(id) { return document.getElementById(id).value.trim(); }
+
+  function showError(elId, msg) {
+    const el = document.getElementById(elId);
+    el.style.display = 'block';
+    el.style.color = '#f85149';
+    el.textContent = msg;
+  }
+
+  async function sendLiteLLM() {
+    const prompt = document.getElementById('t1-prompt').value.trim();
+    if (!prompt) return;
+    const btn = document.getElementById('t1-send');
+    const spinner = document.getElementById('t1-spinner');
+    const out = document.getElementById('t1-output');
+    btn.disabled = true;
+    spinner.style.display = 'inline';
+    out.style.display = 'none';
+    out.style.color = '#8b949e';
+    try {
+      const res = await fetch(cfg('cfg-litellm') + '/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + cfg('cfg-key'),
+        },
+        body: JSON.stringify({
+          model: 'claude-cli/claude-sonnet-4-5',
+          messages: [{ role: 'user', content: prompt }],
+        }),
+      });
+      if (!res.ok) {
+        const txt = await res.text();
+        showError('t1-output', 'HTTP ' + res.status + ': ' + txt);
+        return;
+      }
+      const data = await res.json();
+      const text = data?.choices?.[0]?.message?.content ?? JSON.stringify(data, null, 2);
+      out.textContent = text;
+      out.style.color = '#e6edf3';
+      out.style.display = 'block';
+    } catch (e) {
+      showError('t1-output', 'Fetch error: ' + e.message + '\n(Check CORS — the service must allow browser requests)');
+    } finally {
+      btn.disabled = false;
+      spinner.style.display = 'none';
+    }
+  }
+
+  async function runAgent() {
+    const task = document.getElementById('t3-task').value.trim();
+    if (!task) return;
+    const btn = document.getElementById('t3-run');
+    const spinner = document.getElementById('t3-spinner');
+    btn.disabled = true;
+    spinner.style.display = 'inline';
+    document.getElementById('t3-status').style.display = 'none';
+    document.getElementById('t3-result').style.display = 'none';
+    document.getElementById('t3-logs-wrap').style.display = 'none';
+    try {
+      const res = await fetch(cfg('cfg-agent') + '/run-task', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + cfg('cfg-key'),
+        },
+        body: JSON.stringify({
+          task,
+          max_steps: parseInt(document.getElementById('t3-steps').value) || 10,
+        }),
+      });
+      if (!res.ok) {
+        const txt = await res.text();
+        const statusEl = document.getElementById('t3-status');
+        statusEl.innerHTML = '<span style="background:#3a1a1f;color:#f85149;padding:4px 12px;border-radius:12px;font-size:12px;font-weight:700;">ERROR</span>';
+        statusEl.style.display = 'block';
+        document.getElementById('t3-result').textContent = 'HTTP ' + res.status + ': ' + txt;
+        document.getElementById('t3-result').style.color = '#f85149';
+        document.getElementById('t3-result').style.display = 'block';
+        return;
+      }
+      const data = await res.json();
+      // Status badge
+      const statusEl = document.getElementById('t3-status');
+      const statusColor = data.status === 'completed' ? '#3fb950' : '#f85149';
+      const statusBg   = data.status === 'completed' ? '#0a1f0a' : '#3a1a1f';
+      statusEl.innerHTML = `<span style="background:${statusBg};color:${statusColor};padding:4px 12px;border-radius:12px;font-size:12px;font-weight:700;text-transform:uppercase;">${data.status ?? 'unknown'}</span>` +
+        (data.steps_taken ? `<span style="margin-left:10px;font-size:12px;color:#6e7681;">${data.steps_taken} step(s)</span>` : '');
+      statusEl.style.display = 'block';
+      // Result
+      const resultEl = document.getElementById('t3-result');
+      resultEl.textContent = data.result ?? JSON.stringify(data, null, 2);
+      resultEl.style.color = '#e6edf3';
+      resultEl.style.display = 'block';
+      // Logs
+      if (Array.isArray(data.logs) && data.logs.length) {
+        const tbody = document.getElementById('t3-logs-body');
+        tbody.innerHTML = data.logs.map(l => `
+          <tr style="border-bottom:1px solid #21262d;">
+            <td style="padding:6px 10px;color:#8b949e;">${l.step ?? ''}</td>
+            <td style="padding:6px 10px;color:#bc8cff;">${l.action ?? ''}</td>
+            <td style="padding:6px 10px;color:#8b949e;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${JSON.stringify(l.input??'').replace(/"/g,'&quot;')}">${JSON.stringify(l.input ?? '')}</td>
+            <td style="padding:6px 10px;color:#8b949e;max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${String(l.output??'').replace(/"/g,'&quot;')}">${String(l.output ?? '').slice(0, 120)}</td>
+          </tr>`).join('');
+        document.getElementById('t3-logs-wrap').style.display = 'block';
+      }
+    } catch (e) {
+      const statusEl = document.getElementById('t3-status');
+      statusEl.innerHTML = '<span style="background:#3a1a1f;color:#f85149;padding:4px 12px;border-radius:12px;font-size:12px;font-weight:700;">FETCH ERROR</span>';
+      statusEl.style.display = 'block';
+      const resultEl = document.getElementById('t3-result');
+      resultEl.textContent = e.message + '\n(Check CORS — the service must allow browser requests)';
+      resultEl.style.color = '#f85149';
+      resultEl.style.display = 'block';
+    } finally {
+      btn.disabled = false;
+      spinner.style.display = 'none';
+    }
+  }
+
+  // Allow Enter (without shift) in prompt textarea to submit
+  document.getElementById('t1-prompt').addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendLiteLLM(); }
+  });
+</script>
+
+</body>
+</html>
