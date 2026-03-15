@@ -8,15 +8,15 @@ on:
         required: true
         default: "production"
       service:
-        description: "Service to deploy: litellm-proxy | browser-agent | all"
+        description: "Service to deploy: litellm-proxy | browser-agent"
         required: true
-        default: "all"
+        default: "litellm-proxy"
 
 jobs:
   deploy-litellm-proxy:
     name: "Deploy Task 1 — litellm-proxy"
     runs-on: ubuntu-latest
-    if: ${{ inputs.service == 'litellm-proxy' || inputs.service == 'all' }}
+    if: ${{ inputs.service == 'litellm-proxy' }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -31,7 +31,7 @@ jobs:
   deploy-browser-agent:
     name: "Deploy Task 3 — browser-agent"
     runs-on: ubuntu-latest
-    if: ${{ inputs.service == 'browser-agent' || inputs.service == 'all' }}
+    if: ${{ inputs.service == 'browser-agent' }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
