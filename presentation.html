@@ -792,12 +792,12 @@ uv run pytest tests/ -v -m integration</code></pre>
   <div style="background:#161b22;border:1px solid #30363d;border-radius:10px;padding:18px 24px;margin-bottom:28px;display:flex;gap:16px;flex-wrap:wrap;align-items:flex-end;">
     <div style="flex:2;min-width:200px;">
       <label style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:#6e7681;display:block;margin-bottom:6px;">LiteLLM Proxy URL</label>
-      <input id="cfg-litellm" type="text" value="https://litellm-proxy.zeabur.app"
+      <input id="cfg-litellm" type="text" value="https://litellm-proxy-vici.zeabur.app"
         style="width:100%;background:#0d1117;border:1px solid #30363d;border-radius:6px;padding:8px 12px;color:#e6edf3;font-size:13px;font-family:monospace;">
     </div>
     <div style="flex:2;min-width:200px;">
       <label style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:#6e7681;display:block;margin-bottom:6px;">Browser Agent URL</label>
-      <input id="cfg-agent" type="text" value="https://browser-agent.zeabur.app"
+      <input id="cfg-agent" type="text" value="https://brower-agent.zeabur.app"
         style="width:100%;background:#0d1117;border:1px solid #30363d;border-radius:6px;padding:8px 12px;color:#e6edf3;font-size:13px;font-family:monospace;">
     </div>
     <div style="flex:2;min-width:200px;">
@@ -815,6 +815,7 @@ uv run pytest tests/ -v -m integration</code></pre>
         <div class="card-tag tag-blue" style="margin:0;">Task 1</div>
         <h3 style="margin:0;font-size:16px;">LiteLLM Proxy</h3>
       </div>
+      <p style="font-size:13px;color:#6e7681;margin:0;">將 <code>claude</code> CLI 包裝成 OpenAI 相容的 API — 任何支援 OpenAI 格式的工具都能直接呼叫 Claude，無需改動 SDK。</p>
       <textarea id="t1-prompt" rows="4" placeholder="Enter prompt…"
         style="background:#0d1117;border:1px solid #30363d;border-radius:6px;padding:10px 12px;color:#e6edf3;font-size:13px;font-family:inherit;resize:vertical;width:100%;"></textarea>
       <div style="display:flex;gap:10px;align-items:center;">
@@ -831,6 +832,7 @@ uv run pytest tests/ -v -m integration</code></pre>
         <div class="card-tag tag-green" style="margin:0;">Task 3</div>
         <h3 style="margin:0;font-size:16px;">Browser Agent</h3>
       </div>
+      <p style="font-size:13px;color:#6e7681;margin:0;">輸入一個自然語言任務，Agent 自動操控瀏覽器（搜尋、導航、擷取文字）並回傳結果與每個步驟的操作紀錄。</p>
       <textarea id="t3-task" rows="4" placeholder="Describe a browsing task…"
         style="background:#0d1117;border:1px solid #30363d;border-radius:6px;padding:10px 12px;color:#e6edf3;font-size:13px;font-family:inherit;resize:vertical;width:100%;"></textarea>
       <div style="display:flex;gap:10px;align-items:center;">
@@ -867,6 +869,7 @@ uv run pytest tests/ -v -m integration</code></pre>
         <div class="card-tag tag-purple" style="margin:0;">Task 2</div>
         <h3 style="margin:0;font-size:16px;">GitHub Skills</h3>
       </div>
+      <p style="font-size:13px;color:#6e7681;margin:0 0 12px;">將 CI/CD 操作封裝成 Claude Code 指令 — 在編輯器裡直接觸發測試、Lint、部署，不需要切換到瀏覽器或終端機。</p>
       <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px;">
         <span style="background:#2a1f4a;border:1px solid #bc8cff;border-radius:8px;padding:8px 18px;font-family:monospace;font-size:15px;font-weight:700;color:#bc8cff;">/gh-status</span>
         <span style="background:#2a1f4a;border:1px solid #bc8cff;border-radius:8px;padding:8px 18px;font-family:monospace;font-size:15px;font-weight:700;color:#bc8cff;">/gh-test</span>
@@ -907,7 +910,7 @@ uv run pytest tests/ -v -m integration</code></pre>
           'Authorization': 'Bearer ' + cfg('cfg-key'),
         },
         body: JSON.stringify({
-          model: 'claude-cli/claude-sonnet-4-5',
+          model: 'claude-cli',
           messages: [{ role: 'user', content: prompt }],
         }),
       });
