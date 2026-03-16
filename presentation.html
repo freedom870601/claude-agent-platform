@@ -577,6 +577,9 @@ hr { border: none; border-top: 1px solid var(--border); margin: clamp(0.5rem,1.2
   }
   .cover-bg::before, .cover-bg::after { animation: none; }
 }
+#t3-steps-wrap::-webkit-scrollbar, #t3-out::-webkit-scrollbar { width: 4px; }
+#t3-steps-wrap::-webkit-scrollbar-track, #t3-out::-webkit-scrollbar-track { background: transparent; }
+#t3-steps-wrap::-webkit-scrollbar-thumb, #t3-out::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 4px; }
 </style>
 </head>
 <body>
@@ -809,7 +812,7 @@ ln -s ../github-skills/skills .claude/commands</code></pre>
     </div>
     <div>
       <span class="sl2">6 browser tools</span>
-      <div class="card" style="margin-bottom:var(--gap-md);">
+      <div class="card" style="margin-bottom:var(--gap-sm);">
         <ul class="b">
           <li><code>browser_search(query)</code> — DuckDuckGo HTML (no API key)</li>
           <li><code>navigate(url)</code> — Playwright goto, returns title</li>
@@ -817,6 +820,14 @@ ln -s ../github-skills/skills .claude/commands</code></pre>
           <li><code>click(selector)</code> — Playwright click</li>
           <li><code>type_text(selector, text)</code> — Playwright fill</li>
           <li><code>done(answer)</code> — terminates loop with result</li>
+        </ul>
+      </div>
+      <span class="sl2">Bot detection evasion</span>
+      <div class="card" style="border-color:var(--green-dim);margin-bottom:var(--gap-sm);">
+        <ul class="b">
+          <li><code>playwright-stealth</code> patches <code>navigator.webdriver</code>, WebGL, plugins</li>
+          <li>Real MacOS Chrome 120 User-Agent on every page</li>
+          <li><code>Stealth().use_async(page)</code> — headless mode retained</li>
         </ul>
       </div>
       <span class="sl2">POST /run-task response</span>
@@ -895,15 +906,12 @@ ln -s ../github-skills/skills .claude/commands</code></pre>
           <span id="t3-spin" style="display:none;color:var(--muted);font-size:var(--sz-small);font-family:var(--font-mono);">⏳ running…</span>
         </div>
       </div>
-      <div id="t3-status" style="display:none;margin-bottom:2px;"></div>
-      <div id="t3-out" class="outbox"></div>
-      <details id="t3-logs-wrap" style="display:none;">
-        <summary style="cursor:pointer;font-size:var(--sz-chip);color:var(--dim);padding:3px 0;font-family:var(--font-mono);">Step logs</summary>
-        <table id="t3-logs-table" style="width:100%;border-collapse:collapse;font-size:var(--sz-chip);font-family:var(--font-mono);margin-top:4px;">
-          <thead><tr style="color:var(--dim);text-align:left;border-bottom:1px solid var(--border);"><th style="padding:3px 6px;">Step</th><th style="padding:3px 6px;">Action</th><th style="padding:3px 6px;">Input</th><th style="padding:3px 6px;">Output</th></tr></thead>
-          <tbody id="t3-logs-body"></tbody>
-        </table>
-      </details>
+      <div id="t3-status" style="display:none;margin-bottom:4px;"></div>
+      <div id="t3-steps-wrap" style="display:none;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 10px;max-height:min(120px,13vh);overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--border2) transparent;">
+        <div style="font-size:var(--sz-chip);font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--dim);margin-bottom:5px;">Step Log</div>
+        <div id="t3-steps-list" style="display:flex;flex-direction:column;gap:4px;"></div>
+      </div>
+      <div id="t3-out" class="outbox" style="max-height:min(220px,22vh);overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--border2) transparent;"></div>
     </div>
   </div>
   <div class="card reveal" style="margin-top:var(--gap-sm);padding:10px 16px;">
@@ -921,7 +929,7 @@ ln -s ../github-skills/skills .claude/commands</code></pre>
   <div class="chip cg reveal">Summary</div>
   <h2 class="reveal">Tech Stack</h2>
   <div class="g2 reveal" style="margin-bottom:var(--gap-md);">
-    <div class="card"><div class="chip cb" style="margin-bottom:6px;">Backend</div><div><span class="pill">Python 3.11</span><span class="pill">FastAPI</span><span class="pill">LiteLLM</span><span class="pill">Playwright</span><span class="pill">Pydantic v2</span><span class="pill">uvicorn</span><span class="pill">asyncio</span><span class="pill">uv</span></div></div>
+    <div class="card"><div class="chip cb" style="margin-bottom:6px;">Backend</div><div><span class="pill">Python 3.11</span><span class="pill">FastAPI</span><span class="pill">LiteLLM</span><span class="pill">Playwright</span><span class="pill">playwright-stealth</span><span class="pill">Pydantic v2</span><span class="pill">uvicorn</span><span class="pill">asyncio</span><span class="pill">uv</span></div></div>
     <div class="card"><div class="chip co" style="margin-bottom:6px;">AI / CLI</div><div><span class="pill">Claude CLI</span><span class="pill">claude-sonnet-4-5</span><span class="pill">OpenAI tool_calls</span><span class="pill">stream-json</span><span class="pill">ANTHROPIC_API_KEY</span></div></div>
     <div class="card"><div class="chip cp" style="margin-bottom:6px;">CI/CD &amp; Deploy</div><div><span class="pill">GitHub Actions</span><span class="pill">gh CLI</span><span class="pill">Docker</span><span class="pill">Zeabur</span><span class="pill">zeabur.yaml</span><span class="pill">Claude Code Skills</span></div></div>
     <div class="card"><div class="chip cg" style="margin-bottom:6px;">Testing</div><div><span class="pill">pytest</span><span class="pill">pytest-asyncio</span><span class="pill">unittest.mock</span><span class="pill">httpx TestClient</span><span class="pill">73+ unit tests</span><span class="pill">@pytest.mark.integration</span></div></div>
@@ -1066,7 +1074,8 @@ async function runAgent() {
   const btn = document.getElementById('t3-run');
   const spin = document.getElementById('t3-spin');
   btn.disabled = true; spin.style.display = 'inline';
-  ['t3-status','t3-out','t3-logs-wrap'].forEach(id => document.getElementById(id).style.display = 'none');
+  ['t3-status','t3-out','t3-steps-wrap'].forEach(id => document.getElementById(id).style.display = 'none');
+  document.getElementById('t3-steps-list').innerHTML = '';
   try {
     const res = await fetch(cfg('cfg-agent') + '/run-task', {
       method: 'POST',
@@ -1087,15 +1096,29 @@ async function runAgent() {
     const out = document.getElementById('t3-out');
     out.textContent = data.result ?? JSON.stringify(data, null, 2);
     out.style.color = 'var(--text)'; out.style.display = 'block';
+    out.scrollTop = 0;
     if (Array.isArray(data.logs) && data.logs.length) {
-      document.getElementById('t3-logs-body').innerHTML = data.logs.map(l => `
-        <tr style="border-bottom:1px solid var(--border);">
-          <td style="padding:3px 6px;color:var(--muted);">${l.step??''}</td>
-          <td style="padding:3px 6px;color:var(--purple);">${l.action??''}</td>
-          <td style="padding:3px 6px;color:var(--muted);max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${JSON.stringify(l.input??'')}</td>
-          <td style="padding:3px 6px;color:var(--muted);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${String(l.output??'').slice(0,90)}</td>
-        </tr>`).join('');
-      document.getElementById('t3-logs-wrap').style.display = 'block';
+      const actionColors = { browser_search: 'var(--blue)', navigate: 'var(--orange)', extract_text: 'var(--green)', click: 'var(--purple)', type_text: 'var(--purple)', done: 'var(--green)' };
+      const icons = { browser_search: '🔍', navigate: '🌐', extract_text: '📄', click: '🖱️', type_text: '⌨️', done: '✓' };
+      document.getElementById('t3-steps-list').innerHTML = data.logs.map(l => {
+        const color = actionColors[l.action] || 'var(--muted)';
+        const icon = icons[l.action] || '→';
+        const inputStr = typeof l.input === 'object' ? Object.values(l.input)[0] ?? '' : String(l.input ?? '');
+        const outStr = String(l.output ?? '').slice(0, 80);
+        return `<div style="display:flex;align-items:flex-start;gap:7px;animation:revealUp 0.3s var(--ease) both;animation-delay:${(l.step-1)*0.08}s;">
+          <div style="width:20px;height:20px;border-radius:50%;background:${color}22;border:1px solid ${color};color:${color};font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;">${l.step??''}</div>
+          <div style="flex:1;min-width:0;">
+            <div style="display:flex;align-items:center;gap:5px;">
+              <span style="font-size:var(--sz-chip);font-weight:700;color:${color};font-family:var(--font-mono);">${icon} ${l.action??''}</span>
+              <span style="font-size:var(--sz-chip);color:var(--dim);font-family:var(--font-mono);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:180px;">${String(inputStr).slice(0,60)}</span>
+            </div>
+            ${outStr ? `<div style="font-size:var(--sz-chip);color:var(--muted);font-family:var(--font-mono);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${outStr}</div>` : ''}
+          </div>
+        </div>`;
+      }).join('');
+      const wrap = document.getElementById('t3-steps-wrap');
+      wrap.style.display = 'block';
+      wrap.scrollTop = wrap.scrollHeight;
     }
   } catch (e) {
     const s = document.getElementById('t3-status');
