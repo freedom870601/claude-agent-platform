@@ -1,10 +1,5 @@
 import pytest
-from unittest.mock import AsyncMock, patch
-
-@pytest.fixture(autouse=True)
-def mock_stealth():
-    with patch("app.browser._stealth.use_async", new=AsyncMock()) as m:
-        yield m
+from unittest.mock import AsyncMock, MagicMock, patch
 
 @pytest.fixture
 def mock_page():
@@ -31,13 +26,11 @@ def mock_playwright(mock_browser):
 @pytest.fixture
 async def session(mock_playwright, mock_page, mock_browser):
     from app.browser import BrowserSession
-    with patch("app.browser.async_playwright") as mock_ap:
-        mock_ap.return_value.__aenter__ = AsyncMock(return_value=mock_playwright)
-        mock_ap.return_value.start = AsyncMock(return_value=mock_playwright)
-        mock_context_manager = AsyncMock()
-        mock_context_manager.start = AsyncMock(return_value=mock_playwright)
-        mock_ap.return_value = mock_context_manager
-
+    # Mock _stealth.use_async to return an async context manager yielding mock_playwright
+    mock_ctx = AsyncMock()
+    mock_ctx.__aenter__ = AsyncMock(return_value=mock_playwright)
+    mock_ctx.__aexit__ = AsyncMock(return_value=None)
+    with patch("app.browser._stealth.use_async", return_value=mock_ctx):
         s = BrowserSession()
         s._playwright = mock_playwright
         s._browser = mock_browser

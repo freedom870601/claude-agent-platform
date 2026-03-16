@@ -1,4 +1,3 @@
-from playwright.async_api import async_playwright
 from playwright_stealth import Stealth
 import urllib.parse
 
@@ -12,21 +11,25 @@ _stealth = Stealth()
 
 class BrowserSession:
     def __init__(self):
+        self._pw_ctx = None
         self._playwright = None
         self._browser = None
         self._page = None
 
     async def start(self):
-        self._playwright = await async_playwright().start()
+        # use_async wraps the playwright context manager so stealth
+        # evasions are applied to every page opened in this session
+        from playwright.async_api import async_playwright
+        self._pw_ctx = _stealth.use_async(async_playwright())
+        self._playwright = await self._pw_ctx.__aenter__()
         self._browser = await self._playwright.chromium.launch(headless=True)
         self._page = await self._browser.new_page(user_agent=REAL_USER_AGENT)
-        await _stealth.use_async(self._page)
 
     async def stop(self):
         if self._browser:
             await self._browser.close()
-        if self._playwright:
-            await self._playwright.stop()
+        if self._pw_ctx:
+            await self._pw_ctx.__aexit__(None, None, None)
 
     async def navigate(self, url: str) -> str:
         await self._page.goto(url)
