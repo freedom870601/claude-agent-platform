@@ -1,5 +1,14 @@
 from playwright.async_api import async_playwright
+from playwright_stealth import Stealth
 import urllib.parse
+
+REAL_USER_AGENT = (
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+    "AppleWebKit/537.36 (KHTML, like Gecko) "
+    "Chrome/120.0.0.0 Safari/537.36"
+)
+
+_stealth = Stealth()
 
 class BrowserSession:
     def __init__(self):
@@ -10,7 +19,8 @@ class BrowserSession:
     async def start(self):
         self._playwright = await async_playwright().start()
         self._browser = await self._playwright.chromium.launch(headless=True)
-        self._page = await self._browser.new_page()
+        self._page = await self._browser.new_page(user_agent=REAL_USER_AGENT)
+        await _stealth.use_async(self._page)
 
     async def stop(self):
         if self._browser:

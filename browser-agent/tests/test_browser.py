@@ -3,7 +3,7 @@ from unittest.mock import AsyncMock, patch
 
 @pytest.fixture(autouse=True)
 def mock_stealth():
-    with patch("app.browser.stealth_async", new=AsyncMock()) as m:
+    with patch("app.browser._stealth.use_async", new=AsyncMock()) as m:
         yield m
 
 @pytest.fixture

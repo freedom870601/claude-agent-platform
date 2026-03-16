@@ -2,7 +2,7 @@ FROM python:3.11-slim
 RUN pip install uv
 WORKDIR /app
 COPY pyproject.toml .
-RUN uv pip install --system fastapi "uvicorn[standard]" openai playwright pydantic
+RUN uv pip install --system fastapi "uvicorn[standard]" openai playwright playwright-stealth pydantic
 RUN playwright install chromium --with-deps
 COPY app/ ./app/
 EXPOSE 8080
