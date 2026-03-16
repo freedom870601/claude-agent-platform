@@ -1,6 +1,8 @@
 general_settings:
   master_key: "os.environ/LITELLM_MASTER_KEY"
   allow_origins: ["*"]
+  disable_spend_logs: true
+  disable_reset_budget: true
 
 litellm_settings:
   custom_provider_map:
