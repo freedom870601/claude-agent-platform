@@ -1,6 +1,11 @@
 import pytest
 from unittest.mock import AsyncMock, patch
 
+@pytest.fixture(autouse=True)
+def mock_stealth():
+    with patch("app.browser.stealth_async", new=AsyncMock()) as m:
+        yield m
+
 @pytest.fixture
 def mock_page():
     page = AsyncMock()
