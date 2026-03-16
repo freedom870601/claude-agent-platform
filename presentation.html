@@ -4,191 +4,611 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>AI Agent Platform — Take-Home Demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Outfit:wght@400;600;700;800&family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap" rel="stylesheet">
+
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap');
+/* ===========================================
+   CSS CUSTOM PROPERTIES — THEME
+   =========================================== */
+:root {
+  /* Core palette */
+  --bg:        #060a0e;
+  --surface:   #0c1218;
+  --surface2:  #111a22;
+  --border:    #192030;
+  --border2:   #1f2d3d;
+  --text:      #d8e8f2;
+  --muted:     #5a7080;
+  --dim:       #324050;
 
+  /* Accent colours */
+  --blue:        #3d9cf0;
+  --blue-dim:    #112040;
+  --blue-glow:   rgba(61,156,240,0.18);
+  --green:       #34c974;
+  --green-dim:   #0b2618;
+  --purple:      #a47cff;
+  --purple-dim:  #1e1535;
+  --orange:      #ff9640;
+  --orange-dim:  #321808;
+  --red:         #ff5757;
+  --red-dim:     #280c0c;
+
+  /* Typography — ALL via clamp() */
+  --font-display: 'Outfit', sans-serif;
+  --font-body:    'DM Sans', sans-serif;
+  --font-mono:    'JetBrains Mono', monospace;
+
+  --sz-h1:    clamp(2.2rem,  6vw,   4.5rem);
+  --sz-h2:    clamp(1.5rem,  3.8vw, 2.6rem);
+  --sz-h3:    clamp(0.82rem, 1.3vw, 1rem);
+  --sz-lead:  clamp(0.84rem, 1.4vw, 1.05rem);
+  --sz-body:  clamp(0.78rem, 1.2vw, 0.95rem);
+  --sz-small: clamp(0.68rem, 1vw,   0.82rem);
+  --sz-chip:  clamp(0.58rem, 0.82vw,0.72rem);
+  --sz-mono:  clamp(0.7rem,  1.05vw,0.84rem);
+
+  /* Spacing */
+  --slide-pad-x: clamp(1.5rem, 5vw, 4rem);
+  --slide-pad-y: clamp(1.5rem, 3.5vh, 3.25rem);
+  --gap-sm:  clamp(0.5rem,  0.8vw,  0.875rem);
+  --gap-md:  clamp(0.75rem, 1.2vw,  1.125rem);
+  --gap-lg:  clamp(1rem,    1.8vw,  1.5rem);
+
+  /* Animation */
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --dur: 0.55s;
+}
+
+/* ===========================================
+   VIEWPORT BASE (mandatory)
+   =========================================== */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+html, body {
+  width: 100%; height: 100%;
+  overflow: hidden;
+  /* Outer letterbox background — distinct from slide bg */
+  background: #010406;
+  color: var(--text);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ===========================================
+   SLIDE SYSTEM — 16:9 stage, centred
+   =========================================== */
+#slides-wrap {
+  /* 16:9 aspect ratio, fits inside viewport */
+  width:  min(100vw, 177.78vh);  /* 16/9 × 100vh */
+  height: min(56.25vw, 100vh);   /* 9/16 × 100vw */
+  position: relative;
+  overflow: hidden;
+  flex-shrink: 0;
+  border-radius: 3px;
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,0.05),
+    0 24px 80px rgba(0,0,0,0.85),
+    0 4px 20px rgba(0,0,0,0.6);
+}
+
+.slide {
+  position: absolute; top: 0; left: 0;
+  width: 100%; height: 100%;
+  /* No overflow:hidden here — #slides-wrap already clips.
+     Keeping it on .slide clips text descenders (g, y, p). */
+  overflow: visible;
+  padding: var(--slide-pad-y) var(--slide-pad-x) calc(var(--slide-pad-y) + 2.5rem);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  opacity: 0;
+  transform: translateX(50px);
+  transition: opacity var(--dur) var(--ease), transform var(--dur) var(--ease);
+  pointer-events: none;
+}
+.slide.active  { opacity: 1; transform: translateX(0); pointer-events: all; }
+.slide.go-left { opacity: 0; transform: translateX(-50px); }
+
+/* Vertically centred slides */
+.slide-center { justify-content: center; }
+
+/* ===========================================
+   SUBTLE DOT GRID BACKGROUND
+   =========================================== */
+.slide::before {
+  content: '';
+  position: absolute; inset: 0;
+  background-image: radial-gradient(circle, rgba(255,255,255,0.028) 1px, transparent 1px);
+  background-size: 28px 28px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* All direct slide children sit above the grid */
+.slide > * { position: relative; z-index: 1; }
+
+/* ===========================================
+   REVEAL ANIMATIONS
+   Non-active slides: content hidden via slide opacity (slide itself is opacity:0).
+   Active slide: staggered children animate in.
+   =========================================== */
+.slide.active .reveal {
+  animation: revealUp var(--dur) var(--ease) both;
+}
+/* Stagger delays */
+.slide.active .reveal:nth-child(1)  { animation-delay: 0.05s; }
+.slide.active .reveal:nth-child(2)  { animation-delay: 0.13s; }
+.slide.active .reveal:nth-child(3)  { animation-delay: 0.21s; }
+.slide.active .reveal:nth-child(4)  { animation-delay: 0.28s; }
+.slide.active .reveal:nth-child(5)  { animation-delay: 0.34s; }
+.slide.active .reveal:nth-child(6)  { animation-delay: 0.40s; }
+.slide.active .reveal:nth-child(7)  { animation-delay: 0.45s; }
+.slide.active .reveal:nth-child(8)  { animation-delay: 0.50s; }
+
+@keyframes revealUp {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ===========================================
+   PROGRESS BAR + NAVIGATION
+   =========================================== */
+#progress-bar {
+  position: absolute; top: 0; left: 0; height: 2px;
+  background: var(--blue);
+  box-shadow: 0 0 10px var(--blue-glow);
+  z-index: 200;
+  transition: width 0.4s var(--ease);
+}
+
+#nav {
+  position: absolute; bottom: clamp(0.75rem,2.5vh,1.5rem); right: clamp(0.75rem,2.5vw,1.5rem);
+  display: flex; align-items: center; gap: 8px;
+  background: var(--surface); border: 1px solid var(--border2);
+  border-radius: 40px; padding: 6px 12px;
+  z-index: 200;
+  backdrop-filter: blur(8px);
+}
+#slide-counter {
+  font-family: var(--font-mono); font-size: var(--sz-small);
+  color: var(--muted); min-width: 34px; text-align: center;
+}
+.nav-btn {
+  width: 28px; height: 28px; border-radius: 50%;
+  border: 1px solid var(--border2); background: var(--surface2);
+  color: var(--text); cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+.nav-btn:hover  { background: var(--blue-dim); border-color: var(--blue); color: var(--blue); }
+.nav-btn:disabled { opacity: 0.25; cursor: not-allowed; }
+
+#dots {
+  position: absolute;
+  bottom: clamp(0.75rem,2.5vh,1.5rem); left: 50%;
+  transform: translateX(-50%);
+  display: flex; gap: 6px;
+  z-index: 200;
+}
+.dot {
+  width: 5px; height: 5px; border-radius: 50%;
+  background: var(--dim); cursor: pointer;
+  transition: background 0.3s, width 0.3s, border-radius 0.3s, box-shadow 0.3s;
+}
+.dot.active {
+  background: var(--blue); width: 18px; border-radius: 3px;
+  box-shadow: 0 0 6px var(--blue-glow);
+}
+
+#kb-hint {
+  position: absolute;
+  bottom: clamp(0.75rem,2.5vh,1.5rem); left: clamp(0.75rem,2.5vw,1.5rem);
+  font-size: var(--sz-small); color: var(--dim);
+  font-family: var(--font-mono); z-index: 200;
+}
+
+/* ===========================================
+   TYPOGRAPHY
+   =========================================== */
+h1 {
+  font-family: var(--font-display);
+  font-size: var(--sz-h1); font-weight: 800;
+  color: #fff; line-height: 1.2; letter-spacing: 0.01em;
+  margin-bottom: var(--gap-sm);
+}
+h2 {
+  font-family: var(--font-display);
+  font-size: var(--sz-h2); font-weight: 700;
+  color: #fff; line-height: 1.1; letter-spacing: -0.4px;
+  margin-bottom: var(--gap-md);
+}
+h3 {
+  font-size: var(--sz-h3); font-weight: 600;
+  color: var(--text); margin-bottom: 5px;
+}
+p.lead {
+  font-size: var(--sz-lead); color: var(--muted);
+  line-height: 1.65; max-width: 640px;
+  margin-bottom: var(--gap-md);
+}
+
+/* ===========================================
+   CHIPS
+   =========================================== */
+.chip {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: var(--sz-chip); font-weight: 700;
+  font-family: var(--font-mono);
+  text-transform: uppercase; letter-spacing: 2px;
+  padding: 3px 10px; border-radius: 20px;
+  margin-bottom: var(--gap-sm);
+}
+.cb { background: var(--blue-dim);   color: var(--blue);   border: 1px solid #1a3c6a; }
+.cg { background: var(--green-dim);  color: var(--green);  border: 1px solid #154a2a; }
+.cp { background: var(--purple-dim); color: var(--purple); border: 1px solid #2e1e52; }
+.co { background: var(--orange-dim); color: var(--orange); border: 1px solid #4a2210; }
+.cr { background: var(--red-dim);    color: var(--red);    border: 1px solid #4a1212; }
+
+/* ===========================================
+   CARDS + GRIDS
+   =========================================== */
+.card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 10px; padding: clamp(0.75rem,1.5vw,1.25rem) clamp(0.875rem,1.7vw,1.375rem);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.card:hover { border-color: var(--border2); box-shadow: 0 0 18px rgba(61,156,240,0.07); }
+
+.g2 { display: grid; grid-template-columns: repeat(2,1fr); gap: var(--gap-md); }
+.g3 { display: grid; grid-template-columns: repeat(3,1fr); gap: var(--gap-md); }
+.g4 { display: grid; grid-template-columns: repeat(4,1fr); gap: var(--gap-sm); }
+.tc { display: grid; grid-template-columns: 1fr 1fr; gap: var(--gap-lg); align-items: stretch; }
+
+/* ===========================================
+   BULLET LIST
+   =========================================== */
+ul.b { list-style: none; padding: 0; }
+ul.b li {
+  font-size: var(--sz-body); color: var(--muted);
+  padding: clamp(2px,0.4vh,4px) 0 clamp(2px,0.4vh,4px) 14px;
+  position: relative; line-height: 1.5;
+}
+ul.b li::before {
+  content: '›'; position: absolute; left: 0;
+  color: var(--blue); font-size: 13px;
+}
+
+/* ===========================================
+   CODE BLOCKS
+   =========================================== */
+pre {
+  background: #030609; border: 1px solid var(--border);
+  border-radius: 8px; padding: clamp(0.75rem,1.5vw,1rem) clamp(0.875rem,1.7vw,1.125rem);
+  font-size: var(--sz-mono); line-height: 1.7;
+  overflow-x: auto; font-family: var(--font-mono);
+}
+code { font-family: var(--font-mono); font-size: var(--sz-mono); }
+.kw  { color: #ff7b72; }
+.str { color: #79d4ff; }
+.cm  { color: var(--dim); font-style: italic; }
+.num { color: #79c0ff; }
+
+/* ===========================================
+   FLOW DIAGRAM
+   =========================================== */
+.flow {
+  display: flex; align-items: center; gap: var(--gap-sm);
+  flex-wrap: wrap; margin: var(--gap-md) 0;
+}
+.fbox {
+  background: var(--surface); border: 1px solid var(--border2);
+  border-radius: 7px; padding: clamp(6px,1vh,8px) clamp(10px,1.5vw,14px);
+  font-size: var(--sz-small); font-weight: 600; color: var(--text);
+  text-align: center; line-height: 1.4;
+  transition: border-color 0.2s;
+}
+.fbox:hover { border-color: var(--blue); }
+.farr { color: var(--blue); font-size: 14px; font-weight: 700; flex-shrink: 0; }
+
+/* ===========================================
+   STAT ROW
+   =========================================== */
+.stat-row { display: flex; gap: var(--gap-sm); flex-wrap: wrap; margin: var(--gap-sm) 0; }
+.stat {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 8px; padding: clamp(0.6rem,1.2vh,0.875rem) clamp(0.875rem,1.5vw,1.25rem);
+  text-align: center; flex: 1; min-width: 70px;
+  transition: border-color 0.2s;
+}
+.stat:hover { border-color: var(--blue-dim); }
+.sn {
+  font-size: clamp(1.5rem,3.5vw,2rem);
+  font-weight: 800; font-family: var(--font-display);
+  color: var(--blue); display: block; line-height: 1; margin-bottom: 2px;
+}
+.sl {
+  font-size: var(--sz-chip); color: var(--muted);
+  text-transform: uppercase; letter-spacing: 1px;
+}
+
+/* ===========================================
+   TDD ROWS
+   =========================================== */
+.tdd-row { display: flex; gap: 0; margin: 3px 0; }
+.tc2 {
+  flex: 1; padding: clamp(5px,0.8vh,7px) clamp(8px,1.2vw,11px);
+  font-size: var(--sz-small); border: 1px solid var(--border);
+  border-right: none; font-family: var(--font-mono);
+  line-height: 1.35;
+}
+.tc2:first-child { border-radius: 7px 0 0 7px; }
+.tc2:last-child  { border-right: 1px solid var(--border); border-radius: 0 7px 7px 0; }
+.tr { background: #150303; border-color: rgba(255,87,87,0.3); }
+.tg { background: var(--green-dim); border-color: rgba(52,201,116,0.3); }
+.tl { font-size: var(--sz-chip); font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 3px; }
+.tr .tl { color: var(--red); }
+.tg .tl { color: var(--green); }
+
+/* ===========================================
+   SKILL CARDS (Task 2)
+   =========================================== */
+.sk-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 8px; padding: clamp(0.75rem,1.2vw,0.875rem);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.sk-card:hover { border-color: var(--purple-dim); box-shadow: 0 0 14px rgba(164,124,255,0.08); }
+.sk-cmd { font-family: var(--font-mono); font-size: clamp(0.75rem,1.1vw,0.875rem); font-weight: 700; color: var(--purple); margin-bottom: 5px; }
+.sk-desc { font-size: var(--sz-body); color: var(--muted); margin-bottom: 6px; line-height: 1.45; }
+.sk-inp  { font-size: var(--sz-chip); color: var(--dim); font-family: var(--font-mono); }
+
+/* ===========================================
+   TOOL LOOP (Task 3)
+   =========================================== */
+.tloop {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 10px; padding: clamp(0.875rem,1.5vw,1.125rem);
+  display: flex; flex-direction: column; gap: var(--gap-sm);
+}
+.tstep { display: flex; align-items: flex-start; gap: 9px; }
+.snum  {
+  width: 22px; height: 22px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: var(--sz-chip); font-weight: 700; flex-shrink: 0; margin-top: 2px;
+}
+.su { background: var(--blue-dim);   color: var(--blue); }
+.sc { background: var(--purple-dim); color: var(--purple); }
+.st { background: var(--green-dim);  color: var(--green); }
+.stitle { font-size: var(--sz-body); font-weight: 600; color: var(--text); margin-bottom: 1px; }
+.sdet   { font-size: var(--sz-small); color: var(--dim); font-family: var(--font-mono); }
+
+/* ===========================================
+   MISC UTILITIES
+   =========================================== */
+.pill {
+  display: inline-block; background: var(--surface2);
+  border: 1px solid var(--border); border-radius: 20px;
+  padding: 2px 10px; font-size: var(--sz-body); color: var(--muted); margin: 2px;
+}
+hr { border: none; border-top: 1px solid var(--border); margin: clamp(0.5rem,1.2vh,0.875rem) 0; }
+.sl2 {
+  font-size: var(--sz-chip); font-weight: 700;
+  text-transform: uppercase; letter-spacing: 2px;
+  color: var(--dim); margin-bottom: 8px; display: block;
+}
+.dstep { display: flex; gap: var(--gap-md); align-items: flex-start; }
+.dnum  {
+  width: 28px; height: 28px; border-radius: 50%;
+  background: var(--blue-dim); border: 1.5px solid var(--blue); color: var(--blue);
+  font-size: var(--sz-body); font-weight: 700; font-family: var(--font-display);
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.dbody p { font-size: var(--sz-body); color: var(--muted); line-height: 1.55; }
+
+/* ===========================================
+   COVER SLIDE SPECIFICS
+   =========================================== */
+.cover-bg {
+  position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+  pointer-events: none; overflow: hidden;
+}
+.cover-bg::before {
+  content: '';
+  position: absolute; top: -20%; right: -10%;
+  width: clamp(250px,45vw,550px); height: clamp(250px,45vw,550px);
+  background: radial-gradient(circle, rgba(61,156,240,0.12) 0%, transparent 70%);
+  animation: pulseGlow 6s ease-in-out infinite;
+}
+.cover-bg::after {
+  content: '';
+  position: absolute; bottom: -20%; left: -5%;
+  width: clamp(200px,38vw,450px); height: clamp(200px,38vw,450px);
+  background: radial-gradient(circle, rgba(164,124,255,0.09) 0%, transparent 70%);
+  animation: pulseGlow 8s ease-in-out infinite reverse;
+}
+@keyframes pulseGlow {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.08); opacity: 0.7; }
+}
+
+#s0 { justify-content: center; }
+.cmeta {
+  display: flex; gap: clamp(1rem,2.5vw,2rem); flex-wrap: wrap;
+  margin-top: clamp(1rem,2vh,1.75rem);
+  padding-top: clamp(0.875rem,1.8vh,1.5rem);
+  border-top: 1px solid var(--border);
+}
+.cmeta .ci .cl {
+  font-size: var(--sz-chip); color: var(--dim);
+  text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 1px;
+}
+.cmeta .ci .cv {
+  font-size: clamp(0.9rem,1.8vw,1.1rem); font-weight: 700;
+  font-family: var(--font-display); color: var(--text);
+}
+
+/* ===========================================
+   DEMO SLIDE
+   =========================================== */
+#s8 { padding-top: calc(var(--slide-pad-y) * 0.75); }
+.dcfg {
+  background: var(--surface); border: 1px solid var(--border2);
+  border-radius: 8px; padding: clamp(0.625rem,1vh,0.75rem) clamp(0.875rem,1.5vw,1.125rem);
+  margin-bottom: var(--gap-sm);
+  display: flex; gap: var(--gap-sm); flex-wrap: wrap; align-items: flex-end;
+}
+.dcfg label {
+  font-size: var(--sz-chip); font-weight: 700;
+  text-transform: uppercase; letter-spacing: 1px; color: var(--dim);
+  display: block; margin-bottom: 3px;
+}
+.dcfg input {
+  width: 100%; background: var(--bg); border: 1px solid var(--border);
+  border-radius: 5px; padding: 5px 8px; color: var(--text);
+  font-size: var(--sz-small); font-family: var(--font-mono); outline: none;
+  transition: border-color 0.15s;
+}
+.dcfg input:focus { border-color: var(--blue); }
+.dcfg .df { flex: 2; min-width: 160px; }
+
+.dpanels { display: grid; grid-template-columns: 1fr 1fr; gap: var(--gap-md); }
+.dp { display: flex; flex-direction: column; gap: var(--gap-sm); }
+.dp textarea {
+  background: var(--bg); border: 1px solid var(--border);
+  border-radius: 5px; padding: 6px 8px; color: var(--text);
+  font-size: var(--sz-small); font-family: var(--font-mono);
+  resize: vertical; width: 100%; outline: none;
+  transition: border-color 0.15s;
+}
+.dp textarea:focus { border-color: var(--blue); }
+
+.btn {
+  border: none; border-radius: 5px;
+  padding: 6px 14px; font-size: var(--sz-body); font-weight: 700;
+  cursor: pointer; transition: opacity 0.15s, transform 0.1s;
+}
+.btn:hover:not(:disabled) { opacity: 0.88; transform: translateY(-1px); }
+.btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.btn-b { background: var(--blue); color: #fff; }
+.btn-g { background: var(--green); color: #06100a; }
+
+.outbox {
+  background: #020508; border: 1px solid var(--border);
+  border-radius: 5px; padding: 8px;
+  font-size: var(--sz-small); color: var(--muted);
+  min-height: 52px; white-space: pre-wrap;
+  font-family: var(--font-mono); display: none;
+}
+.sbadge {
+  background: var(--purple-dim); border: 1px solid rgba(164,124,255,0.35);
+  border-radius: 7px; padding: 4px 12px;
+  font-family: var(--font-mono); font-size: var(--sz-body); font-weight: 700;
+  color: var(--purple);
+}
+.sbadge.dep {
+  background: var(--red-dim); border-color: rgba(255,87,87,0.35); color: var(--red);
+}
+
+/* ===========================================
+   HEIGHT BREAKPOINTS — short viewports
+   =========================================== */
+@media (max-height: 700px) {
   :root {
-    --bg: #080c10;
-    --surface: #0e1419;
-    --surface2: #141c24;
-    --border: #1e2832;
-    --border2: #243040;
-    --text: #dce8f0;
-    --muted: #607080;
-    --dim: #3a4a5a;
-    --blue: #3d9cf0;
-    --blue-dim: #1a3a5c;
-    --green: #34c974;
-    --green-dim: #0e2e1c;
-    --purple: #a47cff;
-    --purple-dim: #231a40;
-    --orange: #ff9640;
-    --orange-dim: #3a2010;
-    --red: #ff5757;
-    --red-dim: #2e1010;
+    --slide-pad-y: clamp(1rem, 2.5vh, 1.75rem);
+    --gap-md: clamp(0.5rem, 0.9vw, 0.875rem);
+    --gap-lg: clamp(0.75rem, 1.2vw, 1.125rem);
+    --sz-h1:  clamp(1.5rem, 4.5vw, 2.75rem);
+    --sz-h2:  clamp(1.1rem, 3vw, 1.75rem);
   }
+  .stat-row .sn { font-size: clamp(1.25rem, 2.8vw, 1.6rem); }
+  p.lead { margin-bottom: var(--gap-sm); }
+}
 
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  html, body { width: 100%; height: 100%; overflow: hidden; background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; }
-
-  #progress-bar { position: fixed; top: 0; left: 0; height: 2px; background: var(--blue); box-shadow: 0 0 8px var(--blue); z-index: 100; transition: width 0.4s cubic-bezier(0.4,0,0.2,1); }
-
-  #nav { position: fixed; bottom: 24px; right: 24px; display: flex; align-items: center; gap: 10px; z-index: 100; background: var(--surface); border: 1px solid var(--border2); border-radius: 40px; padding: 7px 14px; }
-  #slide-counter { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--muted); min-width: 38px; text-align: center; }
-  .nav-btn { width: 30px; height: 30px; border-radius: 50%; border: 1px solid var(--border2); background: var(--surface2); color: var(--text); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 13px; transition: all 0.15s; }
-  .nav-btn:hover { background: var(--blue-dim); border-color: var(--blue); color: var(--blue); }
-  .nav-btn:disabled { opacity: 0.3; cursor: not-allowed; }
-
-  #dots { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); display: flex; gap: 6px; z-index: 100; }
-  .dot { width: 5px; height: 5px; border-radius: 50%; background: var(--dim); cursor: pointer; transition: all 0.3s; }
-  .dot.active { background: var(--blue); width: 18px; border-radius: 3px; box-shadow: 0 0 6px var(--blue); }
-
-  #kb-hint { position: fixed; bottom: 24px; left: 24px; font-size: 11px; color: var(--dim); font-family: 'JetBrains Mono', monospace; z-index: 100; }
-
-  #slides-wrap { width: 100%; height: 100%; position: relative; overflow: hidden; }
-
-  .slide { position: absolute; top: 0; left: 0; width: 100%; height: 100%; padding: 52px 64px 80px; display: flex; flex-direction: column; justify-content: flex-start; opacity: 0; transform: translateX(60px); transition: opacity 0.4s cubic-bezier(0.4,0,0.2,1), transform 0.4s cubic-bezier(0.4,0,0.2,1); pointer-events: none; overflow-y: auto; scroll-behavior: smooth; }
-  .slide.active { opacity: 1; transform: translateX(0); pointer-events: all; }
-  .slide.go-left { opacity: 0; transform: translateX(-60px); }
-  /* slides with little content: vertically center via auto margin trick */
-  .slide-center { justify-content: center; }
-
-  .chip { display: inline-flex; align-items: center; gap: 6px; font-size: 10px; font-weight: 700; font-family: 'JetBrains Mono', monospace; text-transform: uppercase; letter-spacing: 2px; padding: 4px 12px; border-radius: 20px; margin-bottom: 14px; }
-  .cb { background: var(--blue-dim); color: var(--blue); border: 1px solid #1e4878; }
-  .cg { background: var(--green-dim); color: var(--green); border: 1px solid #1a5a38; }
-  .cp { background: var(--purple-dim); color: var(--purple); border: 1px solid #3a2a60; }
-  .co { background: var(--orange-dim); color: var(--orange); border: 1px solid #5a3a18; }
-  .cr { background: var(--red-dim); color: var(--red); border: 1px solid #5a1818; }
-
-  h1 { font-family: 'Syne', sans-serif; font-size: clamp(38px, 5vw, 64px); font-weight: 800; color: #fff; line-height: 1.05; letter-spacing: -1.5px; margin-bottom: 12px; }
-  h2 { font-family: 'Syne', sans-serif; font-size: clamp(24px, 3.2vw, 38px); font-weight: 700; color: #fff; line-height: 1.1; letter-spacing: -0.5px; margin-bottom: 16px; }
-  h3 { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 7px; }
-  p.lead { font-size: 15px; color: var(--muted); line-height: 1.65; max-width: 640px; margin-bottom: 20px; }
-
-  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px 22px; }
-  .g3 { display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; }
-  .g2 { display: grid; grid-template-columns: repeat(2,1fr); gap: 14px; }
-  .g4 { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; }
-  .tc { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: stretch; }
-
-  ul.b { list-style: none; padding: 0; }
-  ul.b li { font-size: 13px; color: var(--muted); padding: 3px 0 3px 16px; position: relative; line-height: 1.5; }
-  ul.b li::before { content: '›'; position: absolute; left: 0; color: var(--blue); font-size: 14px; }
-
-  pre { background: #050810; border: 1px solid var(--border); border-radius: 10px; padding: 16px 18px; font-size: 11.5px; line-height: 1.75; overflow-x: auto; font-family: 'JetBrains Mono', monospace; }
-  code { font-family: 'JetBrains Mono', monospace; font-size: 12px; }
-  .kw { color: #ff7b72; } .str { color: #79d4ff; } .cm { color: var(--dim); font-style: italic; } .num { color: #79c0ff; }
-
-  .flow { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; margin: 16px 0; }
-  .fbox { background: var(--surface); border: 1px solid var(--border2); border-radius: 8px; padding: 9px 16px; font-size: 12px; font-weight: 600; color: var(--text); text-align: center; line-height: 1.4; }
-  .farr { color: var(--blue); font-size: 16px; font-weight: 700; flex-shrink: 0; }
-
-  .stat-row { display: flex; gap: 12px; margin: 12px 0; flex-wrap: wrap; }
-  .stat { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px 20px; text-align: center; flex: 1; min-width: 80px; }
-  .sn { font-size: 30px; font-weight: 800; font-family: 'Syne', sans-serif; color: var(--blue); display: block; line-height: 1; margin-bottom: 3px; }
-  .sl { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
-
-  .tdd-row { display: flex; gap: 0; margin: 4px 0; }
-  .tc2 { flex: 1; padding: 8px 12px; font-size: 10.5px; border: 1px solid var(--border); border-right: none; font-family: 'JetBrains Mono', monospace; line-height: 1.4; }
-  .tc2:first-child { border-radius: 8px 0 0 8px; }
-  .tc2:last-child { border-right: 1px solid var(--border); border-radius: 0 8px 8px 0; }
-  .tr { background: #1a0505; border-color: var(--red); }
-  .tg { background: var(--green-dim); border-color: var(--green); }
-  .tl { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
-  .tr .tl { color: var(--red); } .tg .tl { color: var(--green); }
-
-  .sk-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
-  .sk-cmd { font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: 700; color: var(--purple); margin-bottom: 6px; }
-  .sk-desc { font-size: 12px; color: var(--muted); margin-bottom: 8px; line-height: 1.5; }
-  .sk-inp { font-size: 10px; color: var(--dim); font-family: 'JetBrains Mono', monospace; }
-
-  .tloop { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px; display: flex; flex-direction: column; gap: 11px; }
-  .tstep { display: flex; align-items: flex-start; gap: 11px; }
-  .snum { width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; flex-shrink: 0; margin-top: 2px; }
-  .su { background: var(--blue-dim); color: var(--blue); }
-  .sc { background: var(--purple-dim); color: var(--purple); }
-  .st { background: var(--green-dim); color: var(--green); }
-  .stitle { font-size: 12px; font-weight: 600; color: var(--text); margin-bottom: 2px; }
-  .sdet { font-size: 11px; color: var(--dim); font-family: 'JetBrains Mono', monospace; }
-
-  .pill { display: inline-block; background: var(--surface2); border: 1px solid var(--border); border-radius: 20px; padding: 3px 12px; font-size: 11.5px; color: var(--muted); margin: 2px; }
-
-  .dstep { display: flex; gap: 14px; align-items: flex-start; }
-  .dnum { width: 30px; height: 30px; border-radius: 50%; background: var(--blue-dim); border: 1.5px solid var(--blue); color: var(--blue); font-size: 13px; font-weight: 700; font-family: 'Syne', sans-serif; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-  .dbody h3 { font-size: 14px; margin-bottom: 3px; }
-  .dbody p { font-size: 12.5px; color: var(--muted); line-height: 1.55; }
-
-  hr { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
-  .sl2 { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; color: var(--dim); margin-bottom: 10px; display: block; }
-
-  /* Cover */
-  .cover-bg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; overflow: hidden; }
-  .cover-bg::before { content: ''; position: absolute; top: -200px; right: -200px; width: 600px; height: 600px; background: radial-gradient(circle, rgba(61,156,240,0.1) 0%, transparent 70%); }
-  .cover-bg::after { content: ''; position: absolute; bottom: -200px; left: -100px; width: 500px; height: 500px; background: radial-gradient(circle, rgba(164,124,255,0.07) 0%, transparent 70%); }
-
-  #s0 { justify-content: center; }
-  .cmeta { display: flex; gap: 32px; flex-wrap: wrap; margin-top: 36px; padding-top: 28px; border-top: 1px solid var(--border); }
-  .cmeta .ci .cl { font-size: 10px; color: var(--dim); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 2px; }
-  .cmeta .ci .cv { font-size: 17px; font-weight: 700; font-family: 'Syne', sans-serif; color: var(--text); }
-
-  /* demo slide */
-  #s8 { justify-content: flex-start; padding-top: 44px; }
-  .dcfg { background: var(--surface); border: 1px solid var(--border2); border-radius: 10px; padding: 14px 18px; margin-bottom: 16px; display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; }
-  .dcfg label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--dim); display: block; margin-bottom: 4px; }
-  .dcfg input { width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 6px 10px; color: var(--text); font-size: 12px; font-family: 'JetBrains Mono', monospace; outline: none; }
-  .dcfg input:focus { border-color: var(--blue); }
-  .dcfg .df { flex: 2; min-width: 170px; }
-  .dpanels { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-  .dp { display: flex; flex-direction: column; gap: 9px; }
-  .dp textarea { background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 8px 10px; color: var(--text); font-size: 11.5px; font-family: 'JetBrains Mono', monospace; resize: vertical; width: 100%; outline: none; }
-  .dp textarea:focus { border-color: var(--blue); }
-  .btn { border: none; border-radius: 6px; padding: 7px 16px; font-size: 12px; font-weight: 700; cursor: pointer; transition: opacity 0.15s; }
-  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
-  .btn-b { background: var(--blue); color: #fff; }
-  .btn-g { background: var(--green); color: #080c10; }
-  .outbox { background: #050810; border: 1px solid var(--border); border-radius: 6px; padding: 10px; font-size: 11px; color: var(--muted); min-height: 60px; white-space: pre-wrap; font-family: 'JetBrains Mono', monospace; display: none; }
-  .sbadge { background: var(--purple-dim); border: 1px solid rgba(164,124,255,0.4); border-radius: 8px; padding: 5px 14px; font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 700; color: var(--purple); }
-  .sbadge.dep { background: var(--red-dim); border-color: rgba(255,87,87,0.4); color: var(--red); }
-
-  @media (max-width: 880px) {
-    .slide { padding: 36px 22px 68px; }
-    .g3,.g4,.g2,.tc,.dpanels { grid-template-columns: 1fr; }
-    h1 { font-size: 34px; } h2 { font-size: 24px; }
-    .tdd-row { flex-direction: column; }
-    .tc2 { border-right: 1px solid var(--border); border-bottom: none; border-radius: 0; }
-    .tc2:first-child { border-radius: 8px 8px 0 0; }
-    .tc2:last-child { border-bottom: 1px solid var(--border); border-radius: 0 0 8px 8px; }
+@media (max-height: 600px) {
+  :root {
+    --slide-pad-y: clamp(0.75rem, 2vh, 1.25rem);
+    --gap-md: clamp(0.4rem, 0.7vw, 0.65rem);
+    --sz-h2: clamp(1rem, 2.5vw, 1.4rem);
+    --sz-lead: clamp(0.68rem, 1vw, 0.8rem);
+    --sz-body: clamp(0.62rem, 0.85vw, 0.72rem);
   }
+  #kb-hint, #dots { display: none; }
+  .tdd-row { margin: 2px 0; }
+}
+
+@media (max-height: 500px) {
+  :root {
+    --slide-pad-y: 0.5rem;
+    --sz-h2: clamp(0.9rem, 2vw, 1.2rem);
+  }
+  .stat-row { display: none; }
+  .cmeta { margin-top: 0.5rem; padding-top: 0.5rem; }
+}
+
+/* ===========================================
+   NARROW VIEWPORT
+   =========================================== */
+@media (max-width: 800px) {
+  .g3, .g4, .g2, .tc, .dpanels { grid-template-columns: 1fr; }
+  h1 { letter-spacing: -0.5px; }
+}
+
+@media (max-width: 600px) {
+  .tdd-row { flex-direction: column; }
+  .tc2 { border-right: 1px solid var(--border); border-bottom: none; border-radius: 0; }
+  .tc2:first-child { border-radius: 7px 7px 0 0; }
+  .tc2:last-child  { border-bottom: 1px solid var(--border); border-radius: 0 0 7px 7px; }
+}
+
+/* ===========================================
+   REDUCED MOTION
+   =========================================== */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.15s !important;
+  }
+  .cover-bg::before, .cover-bg::after { animation: none; }
+}
 </style>
 </head>
 <body>
 
+<div id="slides-wrap">
 <div id="progress-bar"></div>
-<div id="kb-hint">← → or Space</div>
+<div id="kb-hint">← → Space · F fullscreen</div>
 <div id="dots"></div>
 <div id="nav">
   <button class="nav-btn" id="btn-prev" onclick="prev()">←</button>
   <span id="slide-counter">1 / 8</span>
   <button class="nav-btn" id="btn-next" onclick="next()">→</button>
+  <button class="nav-btn" id="btn-fs" onclick="toggleFullscreen()" title="Fullscreen (F)">⛶</button>
 </div>
 
-<div id="slides-wrap">
-
-<!-- 0: COVER -->
+<!-- ═══════════════════════════════════════════ -->
+<!-- 0: COVER                                    -->
+<!-- ═══════════════════════════════════════════ -->
 <div class="slide slide-center active" id="s0">
   <div class="cover-bg"></div>
-  <div style="position:relative;z-index:1;">
-    <div class="chip cb">VICI Take-Home · Mar 2026</div>
-    <h1>AI Agent<br>Platform</h1>
-    <p class="lead">Three production-grade services built with strict TDD, deployed on Zeabur, and driven by Claude Code as the AI coding agent.</p>
-    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:28px;">
+  <div style="position:relative;z-index:2;">
+    <div class="chip cb reveal">VICI Take-Home · Mar 2026</div>
+    <h1 class="reveal">AI Agent<br>Platform</h1>
+    <p class="lead reveal">Three production-grade services built with strict TDD, deployed on Zeabur, and driven by Claude Code as the AI coding agent.</p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:clamp(0.875rem,2vh,1.5rem);" class="reveal">
       <div class="chip cb">Task 1 · LiteLLM Proxy</div>
       <div class="chip cp">Task 2 · GitHub Skills</div>
       <div class="chip cg">Task 3 · Browser Agent</div>
     </div>
-    <div class="cmeta">
+    <div class="cmeta reveal">
       <div class="ci"><div class="cl">Tasks</div><div class="cv">3 / 3</div></div>
-      <div class="ci"><div class="cl">Unit Tests</div><div class="cv">60+</div></div>
+      <div class="ci"><div class="cl">Unit Tests</div><div class="cv">73+</div></div>
       <div class="ci"><div class="cl">Workflow</div><div class="cv">TDD</div></div>
       <div class="ci"><div class="cl">Deploy</div><div class="cv">Zeabur</div></div>
       <div class="ci"><div class="cl">AI Tool</div><div class="cv">Claude Code</div></div>
@@ -196,55 +616,57 @@
   </div>
 </div>
 
-<!-- 1: ARCHITECTURE -->
+<!-- ═══════════════════════════════════════════ -->
+<!-- 1: ARCHITECTURE                             -->
+<!-- ═══════════════════════════════════════════ -->
 <div class="slide" id="s1">
-  <div class="chip cb">Overview</div>
-  <h2>Architecture</h2>
-  <p class="lead">Three independent services wired together — each deployed on Zeabur, communicating via HTTP.</p>
+  <div class="chip cb reveal">Overview</div>
+  <h2 class="reveal">Architecture</h2>
+  <p class="lead reveal" style="margin-bottom:0;">Three independent services wired together — each deployed on Zeabur, communicating via HTTP.</p>
 
-  <div class="flow" style="margin-bottom:22px;">
+  <div class="flow reveal" style="margin-bottom:var(--gap-md);">
     <div class="fbox" style="border-color:var(--purple);">
-      <div style="font-size:9px;color:var(--purple);text-transform:uppercase;letter-spacing:1px;margin-bottom:2px;">Task 2</div>
-      GitHub Skills<br><span style="font-size:10px;color:var(--muted);">/gh-test · /gh-lint<br>/gh-deploy · /gh-status</span>
+      <div style="font-size:var(--sz-chip);color:var(--purple);text-transform:uppercase;letter-spacing:1px;margin-bottom:2px;">Task 2</div>
+      GitHub Skills<br><span style="font-size:var(--sz-chip);color:var(--muted);">/gh-test · /gh-lint<br>/gh-deploy · /gh-status</span>
     </div>
     <div class="farr">↕</div>
     <div class="fbox" style="border-color:var(--orange);">
-      <div style="font-size:9px;color:var(--orange);text-transform:uppercase;letter-spacing:1px;margin-bottom:2px;">GitHub Actions</div>
-      test.yml · lint.yml<br><span style="font-size:10px;color:var(--muted);">deploy.yml</span>
+      <div style="font-size:var(--sz-chip);color:var(--orange);text-transform:uppercase;letter-spacing:1px;margin-bottom:2px;">GitHub Actions</div>
+      test.yml · lint.yml<br><span style="font-size:var(--sz-chip);color:var(--muted);">deploy.yml</span>
     </div>
-    <div style="flex:1;min-width:16px;"></div>
+    <div style="flex:1;min-width:12px;"></div>
     <div class="fbox" style="border-color:var(--green);">
-      <div style="font-size:9px;color:var(--green);text-transform:uppercase;letter-spacing:1px;margin-bottom:2px;">Task 3</div>
-      Browser Agent<br><span style="font-size:10px;color:var(--muted);">POST /run-task</span>
+      <div style="font-size:var(--sz-chip);color:var(--green);text-transform:uppercase;letter-spacing:1px;margin-bottom:2px;">Task 3</div>
+      Browser Agent<br><span style="font-size:var(--sz-chip);color:var(--muted);">POST /run-task</span>
     </div>
     <div class="farr">→</div>
     <div class="fbox" style="border-color:var(--blue);">
-      <div style="font-size:9px;color:var(--blue);text-transform:uppercase;letter-spacing:1px;margin-bottom:2px;">Task 1</div>
-      LiteLLM Proxy<br><span style="font-size:10px;color:var(--muted);">POST /v1/chat/completions</span>
+      <div style="font-size:var(--sz-chip);color:var(--blue);text-transform:uppercase;letter-spacing:1px;margin-bottom:2px;">Task 1</div>
+      LiteLLM Proxy<br><span style="font-size:var(--sz-chip);color:var(--muted);">POST /v1/chat/completions</span>
     </div>
     <div class="farr">→</div>
     <div class="fbox" style="border-color:var(--red);">
-      <div style="font-size:9px;color:var(--red);text-transform:uppercase;letter-spacing:1px;margin-bottom:2px;">Anthropic</div>
-      Claude CLI<br><span style="font-size:10px;color:var(--muted);">claude -p "..."</span>
+      <div style="font-size:var(--sz-chip);color:var(--red);text-transform:uppercase;letter-spacing:1px;margin-bottom:2px;">Anthropic</div>
+      Claude CLI<br><span style="font-size:var(--sz-chip);color:var(--muted);">claude -p "…"</span>
     </div>
   </div>
 
-  <div class="g3">
+  <div class="g3 reveal">
     <div class="card" style="border-color:var(--blue-dim);">
-      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--dim);margin-bottom:8px;">GitHub Repo</div>
-      <div style="font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--blue);word-break:break-all;">github.com/freedom870601/<br>claude-agent-platform</div>
-      <div style="margin-top:10px;font-size:12px;color:var(--muted);">Commit history shows strict TDD red→green pairs throughout</div>
+      <div style="font-size:var(--sz-chip);font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--dim);margin-bottom:6px;">GitHub Repo</div>
+      <div style="font-family:var(--font-mono);font-size:var(--sz-small);color:var(--blue);word-break:break-all;">github.com/freedom870601/<br>claude-agent-platform</div>
+      <div style="margin-top:8px;font-size:var(--sz-small);color:var(--muted);">Commit history shows strict TDD red→green pairs throughout</div>
     </div>
     <div class="card" style="border-color:var(--green-dim);">
-      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--dim);margin-bottom:8px;">Live Services (Zeabur)</div>
-      <div style="display:flex;flex-direction:column;gap:5px;">
-        <div style="font-family:'JetBrains Mono',monospace;font-size:11.5px;"><span style="color:var(--blue);">Task 1</span> <span style="color:var(--muted);">litellm-proxy-vici.zeabur.app</span></div>
-        <div style="font-family:'JetBrains Mono',monospace;font-size:11.5px;"><span style="color:var(--green);">Task 3</span> <span style="color:var(--muted);">browser-agent.zeabur.app</span></div>
-        <div style="font-family:'JetBrains Mono',monospace;font-size:11.5px;"><span style="color:var(--purple);">Task 2</span> <span style="color:var(--muted);">Claude Code only (no HTTP)</span></div>
+      <div style="font-size:var(--sz-chip);font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--dim);margin-bottom:6px;">Live Services (Zeabur)</div>
+      <div style="display:flex;flex-direction:column;gap:4px;">
+        <div style="font-family:var(--font-mono);font-size:var(--sz-small);"><span style="color:var(--blue);">Task 1</span> <span style="color:var(--muted);">litellm-proxy-vici.zeabur.app</span></div>
+        <div style="font-family:var(--font-mono);font-size:var(--sz-small);"><span style="color:var(--green);">Task 3</span> <span style="color:var(--muted);">browser-agent.zeabur.app</span></div>
+        <div style="font-family:var(--font-mono);font-size:var(--sz-small);"><span style="color:var(--purple);">Task 2</span> <span style="color:var(--muted);">Claude Code only (no HTTP)</span></div>
       </div>
     </div>
     <div class="card" style="border-color:var(--purple-dim);">
-      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--dim);margin-bottom:8px;">AI Workflow</div>
+      <div style="font-size:var(--sz-chip);font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--dim);margin-bottom:6px;">AI Workflow</div>
       <ul class="b">
         <li>Entire project built with <strong style="color:var(--text);">Claude Code</strong></li>
         <li>Skills used: <code>/project:tdd</code>, <code>/project:commit</code></li>
@@ -255,19 +677,21 @@
   </div>
 </div>
 
-<!-- 2: TASK 1 -->
+<!-- ═══════════════════════════════════════════ -->
+<!-- 2: TASK 1                                   -->
+<!-- ═══════════════════════════════════════════ -->
 <div class="slide" id="s2">
-  <div class="chip cb">Task 1</div>
-  <h2>LiteLLM Proxy — Claude CLI as an API</h2>
-  <div class="tc">
+  <div class="chip cb reveal">Task 1</div>
+  <h2 class="reveal">LiteLLM Proxy — Claude CLI as an API</h2>
+  <div class="tc reveal">
     <div>
-      <p class="lead" style="font-size:13.5px;margin-bottom:14px;">Bridges the <code>claude</code> CLI into an <strong style="color:var(--text);">OpenAI-compatible</strong> endpoint. Any client that speaks OpenAI can use Claude — no SDK changes.</p>
-      <div class="flow" style="margin:0 0 14px;">
-        <div class="fbox" style="font-size:11px;">OpenAI request</div>
+      <p class="lead" style="font-size:var(--sz-body);margin-bottom:var(--gap-md);">Bridges the <code>claude</code> CLI into an <strong style="color:var(--text);">OpenAI-compatible</strong> endpoint. Any client that speaks OpenAI can use Claude — no SDK changes.</p>
+      <div class="flow" style="margin:0 0 var(--gap-md);">
+        <div class="fbox" style="font-size:var(--sz-chip);">OpenAI request</div>
         <div class="farr">→</div>
-        <div class="fbox" style="font-size:11px;border-color:var(--blue);">LiteLLM CustomLLM</div>
+        <div class="fbox" style="font-size:var(--sz-chip);border-color:var(--blue);">LiteLLM CustomLLM</div>
         <div class="farr">→</div>
-        <div class="fbox" style="font-size:11px;border-color:var(--red);"><code>claude -p</code></div>
+        <div class="fbox" style="font-size:var(--sz-chip);border-color:var(--red);"><code>claude -p</code></div>
       </div>
       <span class="sl2">Key implementation details</span>
       <ul class="b">
@@ -283,12 +707,10 @@
       <span class="sl2">Demo — curl</span>
 <pre style="height:100%;margin:0;"><code><span class="cm"># Non-streaming</span>
 curl -X POST https://litellm-proxy-vici.zeabur.app/v1/chat/completions \
-  -H <span class="str">"Authorization: Bearer $KEY"</span> <span class="cm"># $KEY = LiteLLM master key (set in Zeabur dashboard)</span> \
+  -H <span class="str">"Authorization: Bearer $KEY"</span> \
   -H <span class="str">"Content-Type: application/json"</span> \
-  -d <span class="str">'{
-    "model": "claude-cli/claude-sonnet-4-5",
-    "messages": [{"role":"user","content":"Hello"}]
-  }'</span>
+  -d <span class="str">'{"model":"claude-cli/claude-sonnet-4-5",
+    "messages":[{"role":"user","content":"Hello"}]}'</span>
 
 <span class="cm"># Streaming — returns SSE chunks</span>
 curl ... -d <span class="str">'{..., "stream": true}'</span>
@@ -309,12 +731,14 @@ curl ... -d <span class="str">'{
   </div>
 </div>
 
-<!-- 3: TASK 2 -->
+<!-- ═══════════════════════════════════════════ -->
+<!-- 3: TASK 2                                   -->
+<!-- ═══════════════════════════════════════════ -->
 <div class="slide" id="s3">
-  <div class="chip cp">Task 2</div>
-  <h2>GitHub Skills — CI/CD as Claude Commands</h2>
-  <p class="lead" style="font-size:13.5px;">Four <code>.md</code> skill files in <code>github-skills/skills/</code>, symlinked into <code>.claude/commands/</code>. Invoke directly from Claude Code — no copy-paste, no context switching.</p>
-  <div class="g4" style="margin-bottom:20px;">
+  <div class="chip cp reveal">Task 2</div>
+  <h2 class="reveal">GitHub Skills — CI/CD as Claude Commands</h2>
+  <p class="lead reveal" style="font-size:var(--sz-body);margin-bottom:var(--gap-md);">Four <code>.md</code> skill files in <code>github-skills/skills/</code>, symlinked into <code>.claude/commands/</code>. Invoke directly from Claude Code — no copy-paste, no context switching.</p>
+  <div class="g4 reveal" style="margin-bottom:var(--gap-md);">
     <div class="sk-card">
       <div class="sk-cmd">/gh-status</div>
       <div class="sk-desc">List recent workflow runs. Read-only — safe to call any time.</div>
@@ -336,7 +760,7 @@ curl ... -d <span class="str">'{
       <div class="sk-inp">repo · branch · environment · service</div>
     </div>
   </div>
-  <div class="tc">
+  <div class="tc reveal">
     <div>
       <span class="sl2">Safety design</span>
       <div class="card">
@@ -357,8 +781,8 @@ git remote get-url origin
 <span class="cm"># Detect changed service from diff</span>
 git diff --name-only HEAD~1
 <span class="cm"># litellm-proxy/** → service=litellm-proxy
-# browser-agent/** → service=browser-agent
-# both / neither   → service=all</span>
+# browser-agent/**  → service=browser-agent
+# both / neither    → service=all</span>
 
 <span class="cm"># Symlink install</span>
 ln -s ../github-skills/skills .claude/commands</code></pre>
@@ -366,11 +790,13 @@ ln -s ../github-skills/skills .claude/commands</code></pre>
   </div>
 </div>
 
-<!-- 4: TASK 3 -->
+<!-- ═══════════════════════════════════════════ -->
+<!-- 4: TASK 3                                   -->
+<!-- ═══════════════════════════════════════════ -->
 <div class="slide" id="s4">
-  <div class="chip cg">Task 3</div>
-  <h2>Browser Agent — Natural Language → Web Actions</h2>
-  <div class="tc">
+  <div class="chip cg reveal">Task 3</div>
+  <h2 class="reveal">Browser Agent — Natural Language → Web Actions</h2>
+  <div class="tc reveal">
     <div>
       <span class="sl2">Tool-use loop</span>
       <div class="tloop">
@@ -383,7 +809,7 @@ ln -s ../github-skills/skills .claude/commands</code></pre>
     </div>
     <div>
       <span class="sl2">6 browser tools</span>
-      <div class="card" style="margin-bottom:12px;">
+      <div class="card" style="margin-bottom:var(--gap-md);">
         <ul class="b">
           <li><code>browser_search(query)</code> — DuckDuckGo HTML (no API key)</li>
           <li><code>navigate(url)</code> — Playwright goto, returns title</li>
@@ -400,8 +826,7 @@ ln -s ../github-skills/skills .claude/commands</code></pre>
   <span class="str">"result"</span>: <span class="str">"Python 3.13.2 released..."</span>,
   <span class="str">"steps_taken"</span>: <span class="num">3</span>,
   <span class="str">"logs"</span>: [{
-    <span class="str">"step"</span>: <span class="num">1</span>,
-    <span class="str">"action"</span>: <span class="str">"browser_search"</span>,
+    <span class="str">"step"</span>: <span class="num">1</span>, <span class="str">"action"</span>: <span class="str">"browser_search"</span>,
     <span class="str">"input"</span>: {<span class="str">"query"</span>: <span class="str">"..."</span>},
     <span class="str">"output"</span>: <span class="str">"..."</span>,
     <span class="str">"timestamp"</span>: <span class="str">"2026-03-15T..."</span>
@@ -411,111 +836,123 @@ ln -s ../github-skills/skills .claude/commands</code></pre>
   </div>
 </div>
 
-<!-- 5: TDD -->
+<!-- ═══════════════════════════════════════════ -->
+<!-- 5: TDD EVIDENCE                             -->
+<!-- ═══════════════════════════════════════════ -->
 <div class="slide" id="s5">
-  <div class="chip co">Quality</div>
-  <h2>TDD Evidence — Red → Green</h2>
-  <div class="stat-row">
-    <div class="stat"><span class="sn">73+</span><div class="sl">Unit Tests<br><span style="font-size:9px;color:var(--dim);">(+ 6 integration)</span></div></div>
+  <div class="chip co reveal">Quality</div>
+  <h2 class="reveal">TDD Evidence — Red → Green</h2>
+  <div class="stat-row reveal">
+    <div class="stat"><span class="sn">73+</span><div class="sl">Unit Tests<br><span style="font-size:var(--sz-chip);color:var(--dim);">(+ 6 integration)</span></div></div>
     <div class="stat"><span class="sn" style="color:var(--blue);">28</span><div class="sl">Task 1</div></div>
     <div class="stat"><span class="sn" style="color:var(--purple);">13</span><div class="sl">Task 2</div></div>
     <div class="stat"><span class="sn" style="color:var(--green);">32</span><div class="sl">Task 3</div></div>
   </div>
-  <span class="sl2" style="margin-top:6px;">Actual git commit pairs</span>
-  <div class="tdd-row"><div class="tc2 tr"><div class="tl">🔴 Failing test</div><code>test(task1): add failing test for simple user message assembly</code></div><div class="tc2 tg"><div class="tl">🟢 Implementation</div><code>feat(task1): implement assemble_prompt for simple user message</code></div></div>
-  <div class="tdd-row"><div class="tc2 tr"><div class="tl">🔴 Failing test</div><code>test(task1): add failing tests for CLI command builder</code></div><div class="tc2 tg"><div class="tl">🟢 Implementation</div><code>feat(task1): implement _build_cmd for claude CLI invocation</code></div></div>
-  <div class="tdd-row"><div class="tc2 tr"><div class="tl">🔴 Failing test</div><code>test(task1): add failing test for astreaming yields text chunks</code></div><div class="tc2 tg"><div class="tl">🟢 Implementation</div><code>feat(task1): implement astreaming with JSON line parsing</code></div></div>
-  <div class="tdd-row"><div class="tc2 tr"><div class="tl">🔴 Failing test</div><code>test(task2): add failing tests for load_frontmatter, check_required_fields</code></div><div class="tc2 tg"><div class="tl">🟢 Implementation</div><code>feat(task2): implement load_frontmatter, check_required_fields, validate_skill</code></div></div>
-  <div class="tdd-row"><div class="tc2 tr"><div class="tl">🔴 Failing test</div><code>test(task2): add failing test that all skill files pass validate_skill</code></div><div class="tc2 tg"><div class="tl">🟢 Implementation</div><code>feat(task2): add skill markdown files (gh-lint, gh-test, gh-deploy, gh-status)</code></div></div>
-  <div class="tdd-row"><div class="tc2 tr"><div class="tl">🔴 Failing test</div><code>test(task3): add failing test for browser_search returns results list</code></div><div class="tc2 tg"><div class="tl">🟢 Implementation</div><code>feat(task3): implement browser_search tool with DuckDuckGo HTML parser</code></div></div>
+  <span class="sl2 reveal" style="margin-top:var(--gap-sm);">Actual git commit pairs</span>
+  <div class="reveal">
+    <div class="tdd-row"><div class="tc2 tr"><div class="tl">🔴 Failing test</div><code>test(task1): add failing test for simple user message assembly</code></div><div class="tc2 tg"><div class="tl">🟢 Implementation</div><code>feat(task1): implement assemble_prompt for simple user message</code></div></div>
+    <div class="tdd-row"><div class="tc2 tr"><div class="tl">🔴 Failing test</div><code>test(task1): add failing tests for CLI command builder</code></div><div class="tc2 tg"><div class="tl">🟢 Implementation</div><code>feat(task1): implement _build_cmd for claude CLI invocation</code></div></div>
+    <div class="tdd-row"><div class="tc2 tr"><div class="tl">🔴 Failing test</div><code>test(task1): add failing test for astreaming yields text chunks</code></div><div class="tc2 tg"><div class="tl">🟢 Implementation</div><code>feat(task1): implement astreaming with JSON line parsing</code></div></div>
+    <div class="tdd-row"><div class="tc2 tr"><div class="tl">🔴 Failing test</div><code>test(task2): add failing tests for load_frontmatter, check_required_fields</code></div><div class="tc2 tg"><div class="tl">🟢 Implementation</div><code>feat(task2): implement load_frontmatter, check_required_fields, validate_skill</code></div></div>
+    <div class="tdd-row"><div class="tc2 tr"><div class="tl">🔴 Failing test</div><code>test(task2): add failing test that all skill files pass validate_skill</code></div><div class="tc2 tg"><div class="tl">🟢 Implementation</div><code>feat(task2): add skill markdown files (gh-lint, gh-test, gh-deploy, gh-status)</code></div></div>
+    <div class="tdd-row"><div class="tc2 tr"><div class="tl">🔴 Failing test</div><code>test(task3): add failing test for browser_search returns results list</code></div><div class="tc2 tg"><div class="tl">🟢 Implementation</div><code>feat(task3): implement browser_search tool with DuckDuckGo HTML parser</code></div></div>
+  </div>
 </div>
 
-<!-- 8: INTERACTIVE DEMO -->
+<!-- ═══════════════════════════════════════════ -->
+<!-- 6: INTERACTIVE DEMO                         -->
+<!-- ═══════════════════════════════════════════ -->
 <div class="slide" id="s8">
-  <div class="chip cg">Live</div>
-  <h2>Interactive Demo</h2>
-  <div class="dcfg">
-    <div class="df"><label>LiteLLM Proxy URL</label><input id="cfg-litellm" type="text" value="https://litellm-proxy-vici.zeabur.app" style="max-width:340px;"></div>
-    <div class="df"><label>Browser Agent URL</label><input id="cfg-agent" type="text" value="https://browser-agent.zeabur.app" style="max-width:340px;"></div>
+  <div class="chip cg reveal">Live</div>
+  <h2 class="reveal" style="margin-bottom:var(--gap-sm);">Interactive Demo</h2>
+  <div class="dcfg reveal">
+    <div class="df"><label>LiteLLM Proxy URL</label><input id="cfg-litellm" type="text" value="https://litellm-proxy-vici.zeabur.app" style="max-width:300px;"></div>
+    <div class="df"><label>Browser Agent URL</label><input id="cfg-agent" type="text" value="https://browser-agent.zeabur.app" style="max-width:300px;"></div>
     <div class="df" style="flex:1.2;"><label>Master Key</label><input id="cfg-key" type="password" placeholder="sk-…"></div>
   </div>
-  <div class="dpanels">
+  <div class="dpanels reveal">
     <div class="dp">
       <div class="card" style="flex:none;">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:9px;"><div class="chip cb" style="margin:0;">Task 1</div><h3 style="margin:0;font-size:13px;">LiteLLM Proxy</h3></div>
-        <p style="font-size:11.5px;color:var(--muted);margin-bottom:9px;">Wraps the claude CLI as an OpenAI-compatible API — any client that speaks the OpenAI format can call Claude directly.</p>
-        <textarea id="t1-prompt" rows="3" placeholder="Enter prompt…"></textarea>
-        <div style="display:flex;gap:8px;align-items:center;margin-top:7px;">
+        <div style="display:flex;align-items:center;gap:7px;margin-bottom:7px;"><div class="chip cb" style="margin:0;">Task 1</div><h3 style="margin:0;">LiteLLM Proxy</h3></div>
+        <p style="font-size:var(--sz-small);color:var(--muted);margin-bottom:7px;">Wraps the claude CLI as an OpenAI-compatible API — any client that speaks the OpenAI format can call Claude directly.</p>
+        <textarea id="t1-prompt" rows="2" placeholder="Enter prompt…"></textarea>
+        <div style="display:flex;gap:7px;align-items:center;margin-top:6px;">
           <button class="btn btn-b" id="t1-send" onclick="sendLiteLLM()">Send</button>
-          <span id="t1-spin" style="display:none;color:var(--muted);font-size:11px;font-family:'JetBrains Mono',monospace;">⏳ waiting…</span>
+          <span id="t1-spin" style="display:none;color:var(--muted);font-size:var(--sz-small);font-family:var(--font-mono);">⏳ waiting…</span>
         </div>
       </div>
       <div id="t1-out" class="outbox"></div>
     </div>
     <div class="dp">
       <div class="card" style="flex:none;">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:9px;"><div class="chip cg" style="margin:0;">Task 3</div><h3 style="margin:0;font-size:13px;">Browser Agent</h3></div>
-        <p style="font-size:11.5px;color:var(--muted);margin-bottom:9px;">Describe a task in plain English. The agent controls a real browser and returns the result with a step-by-step log.</p>
-        <textarea id="t3-task" rows="3" placeholder="Describe a browsing task…"></textarea>
-        <div style="display:flex;gap:8px;align-items:center;margin-top:7px;">
-          <label style="font-size:10px;color:var(--muted);">max_steps</label>
-          <input id="t3-steps" type="number" value="10" min="1" max="50" style="width:48px;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:4px 6px;color:var(--text);font-size:11px;text-align:center;font-family:'JetBrains Mono',monospace;">
+        <div style="display:flex;align-items:center;gap:7px;margin-bottom:7px;"><div class="chip cg" style="margin:0;">Task 3</div><h3 style="margin:0;">Browser Agent</h3></div>
+        <p style="font-size:var(--sz-small);color:var(--muted);margin-bottom:7px;">Describe a task in plain English. The agent controls a real browser and returns the result with a step-by-step log.</p>
+        <textarea id="t3-task" rows="2" placeholder="Describe a browsing task…"></textarea>
+        <div style="display:flex;gap:7px;align-items:center;margin-top:6px;">
+          <label style="font-size:var(--sz-chip);color:var(--muted);">max_steps</label>
+          <input id="t3-steps" type="number" value="10" min="1" max="50" style="width:44px;background:var(--bg);border:1px solid var(--border);border-radius:5px;padding:4px 5px;color:var(--text);font-size:var(--sz-small);text-align:center;font-family:var(--font-mono);">
           <button class="btn btn-g" id="t3-run" onclick="runAgent()">Run</button>
-          <span id="t3-spin" style="display:none;color:var(--muted);font-size:11px;font-family:'JetBrains Mono',monospace;">⏳ running…</span>
+          <span id="t3-spin" style="display:none;color:var(--muted);font-size:var(--sz-small);font-family:var(--font-mono);">⏳ running…</span>
         </div>
       </div>
-      <div id="t3-status" style="display:none;margin-bottom:3px;"></div>
+      <div id="t3-status" style="display:none;margin-bottom:2px;"></div>
       <div id="t3-out" class="outbox"></div>
       <details id="t3-logs-wrap" style="display:none;">
-        <summary style="cursor:pointer;font-size:10px;color:var(--dim);padding:4px 0;font-family:'JetBrains Mono',monospace;">Step logs</summary>
-        <table id="t3-logs-table" style="width:100%;border-collapse:collapse;font-size:10.5px;font-family:'JetBrains Mono',monospace;margin-top:5px;">
-          <thead><tr style="color:var(--dim);text-align:left;border-bottom:1px solid var(--border);"><th style="padding:4px 7px;">Step</th><th style="padding:4px 7px;">Action</th><th style="padding:4px 7px;">Input</th><th style="padding:4px 7px;">Output</th></tr></thead>
+        <summary style="cursor:pointer;font-size:var(--sz-chip);color:var(--dim);padding:3px 0;font-family:var(--font-mono);">Step logs</summary>
+        <table id="t3-logs-table" style="width:100%;border-collapse:collapse;font-size:var(--sz-chip);font-family:var(--font-mono);margin-top:4px;">
+          <thead><tr style="color:var(--dim);text-align:left;border-bottom:1px solid var(--border);"><th style="padding:3px 6px;">Step</th><th style="padding:3px 6px;">Action</th><th style="padding:3px 6px;">Input</th><th style="padding:3px 6px;">Output</th></tr></thead>
           <tbody id="t3-logs-body"></tbody>
         </table>
       </details>
     </div>
   </div>
-  <div class="card" style="margin-top:12px;padding:12px 18px;">
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;"><div class="chip cp" style="margin:0;">Task 2</div><h3 style="margin:0;font-size:13px;">GitHub Skills</h3><span style="font-size:11px;color:var(--dim);margin-left:auto;">Run inside Claude Code only</span></div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+  <div class="card reveal" style="margin-top:var(--gap-sm);padding:10px 16px;">
+    <div style="display:flex;align-items:center;gap:9px;margin-bottom:7px;"><div class="chip cp" style="margin:0;">Task 2</div><h3 style="margin:0;">GitHub Skills</h3><span style="font-size:var(--sz-small);color:var(--dim);margin-left:auto;">Run inside Claude Code only</span></div>
+    <div style="display:flex;gap:7px;flex-wrap:wrap;">
       <span class="sbadge">/gh-status</span><span class="sbadge">/gh-test</span><span class="sbadge">/gh-lint</span><span class="sbadge dep">/gh-deploy</span>
     </div>
   </div>
 </div>
 
-<!-- 9: SUMMARY -->
+<!-- ═══════════════════════════════════════════ -->
+<!-- 7: SUMMARY                                  -->
+<!-- ═══════════════════════════════════════════ -->
 <div class="slide" id="s9">
-  <div class="chip cg">Summary</div>
-  <h2>Tech Stack</h2>
-  <div class="g2" style="margin-bottom:16px;">
-    <div class="card"><div class="chip cb" style="margin-bottom:7px;">Backend</div><div><span class="pill">Python 3.11</span><span class="pill">FastAPI</span><span class="pill">LiteLLM</span><span class="pill">Playwright</span><span class="pill">Pydantic v2</span><span class="pill">uvicorn</span><span class="pill">asyncio</span><span class="pill">uv</span></div></div>
-    <div class="card"><div class="chip co" style="margin-bottom:7px;">AI / CLI</div><div><span class="pill">Claude CLI</span><span class="pill">claude-sonnet-4-5</span><span class="pill">OpenAI tool_calls</span><span class="pill">stream-json</span><span class="pill">ANTHROPIC_API_KEY</span></div></div>
-    <div class="card"><div class="chip cp" style="margin-bottom:7px;">CI/CD &amp; Deploy</div><div><span class="pill">GitHub Actions</span><span class="pill">gh CLI</span><span class="pill">Docker</span><span class="pill">Zeabur</span><span class="pill">zeabur.yaml</span><span class="pill">Claude Code Skills</span></div></div>
-    <div class="card"><div class="chip cg" style="margin-bottom:7px;">Testing</div><div><span class="pill">pytest</span><span class="pill">pytest-asyncio</span><span class="pill">unittest.mock</span><span class="pill">httpx TestClient</span><span class="pill">73+ unit tests</span><span class="pill">@pytest.mark.integration</span></div></div>
+  <div class="chip cg reveal">Summary</div>
+  <h2 class="reveal">Tech Stack</h2>
+  <div class="g2 reveal" style="margin-bottom:var(--gap-md);">
+    <div class="card"><div class="chip cb" style="margin-bottom:6px;">Backend</div><div><span class="pill">Python 3.11</span><span class="pill">FastAPI</span><span class="pill">LiteLLM</span><span class="pill">Playwright</span><span class="pill">Pydantic v2</span><span class="pill">uvicorn</span><span class="pill">asyncio</span><span class="pill">uv</span></div></div>
+    <div class="card"><div class="chip co" style="margin-bottom:6px;">AI / CLI</div><div><span class="pill">Claude CLI</span><span class="pill">claude-sonnet-4-5</span><span class="pill">OpenAI tool_calls</span><span class="pill">stream-json</span><span class="pill">ANTHROPIC_API_KEY</span></div></div>
+    <div class="card"><div class="chip cp" style="margin-bottom:6px;">CI/CD &amp; Deploy</div><div><span class="pill">GitHub Actions</span><span class="pill">gh CLI</span><span class="pill">Docker</span><span class="pill">Zeabur</span><span class="pill">zeabur.yaml</span><span class="pill">Claude Code Skills</span></div></div>
+    <div class="card"><div class="chip cg" style="margin-bottom:6px;">Testing</div><div><span class="pill">pytest</span><span class="pill">pytest-asyncio</span><span class="pill">unittest.mock</span><span class="pill">httpx TestClient</span><span class="pill">73+ unit tests</span><span class="pill">@pytest.mark.integration</span></div></div>
   </div>
-  <div class="card" style="background:var(--green-dim);border-color:rgba(52,201,116,0.3);">
-    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:14px;">
+  <div class="card reveal" style="background:var(--green-dim);border-color:rgba(52,201,116,0.25);">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:var(--gap-md);">
       <div>
-        <div style="font-size:19px;font-weight:800;font-family:'Syne',sans-serif;color:var(--green);margin-bottom:3px;">All three tasks complete ✓</div>
-        <div style="font-size:12.5px;color:var(--muted);">Strict TDD workflow · Zeabur deployment · GitHub CI/CD · Claude Skills symlinked</div>
+        <div style="font-size:clamp(1rem,2.2vw,1.2rem);font-weight:800;font-family:var(--font-display);color:var(--green);margin-bottom:3px;">All three tasks complete ✓</div>
+        <div style="font-size:var(--sz-small);color:var(--muted);">Strict TDD workflow · Zeabur deployment · GitHub CI/CD · Claude Skills symlinked</div>
       </div>
-      <div style="display:flex;gap:18px;">
-        <div style="text-align:center;"><div style="font-size:28px;font-weight:800;font-family:'Syne',sans-serif;color:var(--green);">73+</div><div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;">Tests</div></div>
-        <div style="text-align:center;"><div style="font-size:28px;font-weight:800;font-family:'Syne',sans-serif;color:var(--green);">3</div><div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;">Services</div></div>
-        <div style="text-align:center;"><div style="font-size:28px;font-weight:800;font-family:'Syne',sans-serif;color:var(--green);">4</div><div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;">Skills</div></div>
+      <div style="display:flex;gap:var(--gap-lg);">
+        <div style="text-align:center;"><div style="font-size:clamp(1.4rem,3vw,1.8rem);font-weight:800;font-family:var(--font-display);color:var(--green);">73+</div><div style="font-size:var(--sz-chip);color:var(--muted);text-transform:uppercase;letter-spacing:1px;">Tests</div></div>
+        <div style="text-align:center;"><div style="font-size:clamp(1.4rem,3vw,1.8rem);font-weight:800;font-family:var(--font-display);color:var(--green);">3</div><div style="font-size:var(--sz-chip);color:var(--muted);text-transform:uppercase;letter-spacing:1px;">Services</div></div>
+        <div style="text-align:center;"><div style="font-size:clamp(1.4rem,3vw,1.8rem);font-weight:800;font-family:var(--font-display);color:var(--green);">4</div><div style="font-size:var(--sz-chip);color:var(--muted);text-transform:uppercase;letter-spacing:1px;">Skills</div></div>
       </div>
     </div>
   </div>
 </div>
 
+
 </div><!-- /slides-wrap -->
 
 <script>
+/* ===========================================
+   SLIDE PRESENTATION CONTROLLER
+   =========================================== */
 const slideEls = Array.from(document.querySelectorAll('.slide'));
 const TOTAL = slideEls.length;
 let cur = 0, busy = false;
 
-// Build dots
+// Build nav dots
 const dotsEl = document.getElementById('dots');
 for (let i = 0; i < TOTAL; i++) {
   const d = document.createElement('div');
@@ -524,21 +961,19 @@ for (let i = 0; i < TOTAL; i++) {
   dotsEl.appendChild(d);
 }
 
-function getSlide(i) { return slideEls[i]; }
-
 function goTo(nxt) {
   if (nxt === cur || busy || nxt < 0 || nxt >= TOTAL) return;
   busy = true;
   const dir = nxt > cur ? 1 : -1;
-  const from = getSlide(cur);
-  const to = getSlide(nxt);
+  const from = slideEls[cur];
+  const to = slideEls[nxt];
 
   from.classList.remove('active');
-  from.style.transform = dir > 0 ? 'translateX(-60px)' : 'translateX(60px)';
+  from.style.transform = dir > 0 ? 'translateX(-50px)' : 'translateX(50px)';
   from.style.opacity = '0';
 
   to.style.transition = 'none';
-  to.style.transform = dir > 0 ? 'translateX(60px)' : 'translateX(-60px)';
+  to.style.transform = dir > 0 ? 'translateX(50px)' : 'translateX(-50px)';
   to.style.opacity = '0';
 
   requestAnimationFrame(() => requestAnimationFrame(() => {
@@ -553,7 +988,7 @@ function goTo(nxt) {
     from.style.opacity = '';
     from.style.transition = '';
     busy = false;
-  }, 420);
+  }, 520);
 
   cur = nxt;
   ui();
@@ -574,24 +1009,48 @@ document.addEventListener('keydown', e => {
   if (e.target.tagName === 'TEXTAREA' || e.target.tagName === 'INPUT') return;
   if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'ArrowDown') { e.preventDefault(); next(); }
   if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') { e.preventDefault(); prev(); }
+  if (e.key === 'f' || e.key === 'F') toggleFullscreen();
+});
+
+function toggleFullscreen() {
+  if (!document.fullscreenElement) {
+    document.documentElement.requestFullscreen();
+  } else {
+    document.exitFullscreen();
+  }
+}
+
+// Touch/swipe support
+let touchStartX = 0;
+document.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; }, { passive: true });
+document.addEventListener('touchend', e => {
+  const dx = e.changedTouches[0].clientX - touchStartX;
+  if (Math.abs(dx) > 50) { dx < 0 ? next() : prev(); }
 });
 
 ui();
 
-// ── Interactive Demo ──
+/* ===========================================
+   INTERACTIVE DEMO FUNCTIONS
+   =========================================== */
 function cfg(id) { return document.getElementById(id).value.trim(); }
-function err(elId, msg) { const el = document.getElementById(elId); el.style.display='block'; el.style.color='var(--red)'; el.textContent=msg; }
+function err(elId, msg) {
+  const el = document.getElementById(elId);
+  el.style.display = 'block'; el.style.color = 'var(--red)'; el.textContent = msg;
+}
 
 async function sendLiteLLM() {
   const prompt = document.getElementById('t1-prompt').value.trim();
   if (!prompt) return;
-  const btn = document.getElementById('t1-send'), spin = document.getElementById('t1-spin'), out = document.getElementById('t1-out');
+  const btn = document.getElementById('t1-send');
+  const spin = document.getElementById('t1-spin');
+  const out = document.getElementById('t1-out');
   btn.disabled = true; spin.style.display = 'inline'; out.style.display = 'none';
   try {
     const res = await fetch(cfg('cfg-litellm') + '/v1/chat/completions', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + cfg('cfg-key') },
-      body: JSON.stringify({ model: 'claude-cli/claude-sonnet-4-5', messages: [{ role: 'user', content: prompt }] }),
+      body: JSON.stringify({ model: 'claude-cli', messages: [{ role: 'user', content: prompt }] }),
     });
     if (!res.ok) { err('t1-out', 'HTTP ' + res.status + ': ' + await res.text()); return; }
     const data = await res.json();
@@ -604,7 +1063,8 @@ async function sendLiteLLM() {
 async function runAgent() {
   const task = document.getElementById('t3-task').value.trim();
   if (!task) return;
-  const btn = document.getElementById('t3-run'), spin = document.getElementById('t3-spin');
+  const btn = document.getElementById('t3-run');
+  const spin = document.getElementById('t3-spin');
   btn.disabled = true; spin.style.display = 'inline';
   ['t3-status','t3-out','t3-logs-wrap'].forEach(id => document.getElementById(id).style.display = 'none');
   try {
@@ -615,14 +1075,14 @@ async function runAgent() {
     });
     const s = document.getElementById('t3-status');
     if (!res.ok) {
-      s.innerHTML = '<span style="background:var(--red-dim);color:var(--red);padding:2px 9px;border-radius:9px;font-size:10px;font-weight:700;font-family:\'JetBrains Mono\',monospace;">ERROR</span>';
+      s.innerHTML = '<span style="background:var(--red-dim);color:var(--red);padding:2px 9px;border-radius:9px;font-size:var(--sz-chip);font-weight:700;font-family:var(--font-mono);">ERROR</span>';
       s.style.display = 'block';
       err('t3-out', 'HTTP ' + res.status + ': ' + await res.text()); return;
     }
     const data = await res.json();
     const ok = data.status === 'completed';
-    s.innerHTML = `<span style="background:${ok?'var(--green-dim)':'var(--red-dim)'};color:${ok?'var(--green)':'var(--red)'};padding:2px 9px;border-radius:9px;font-size:10px;font-weight:700;font-family:'JetBrains Mono',monospace;text-transform:uppercase;">${data.status??'unknown'}</span>` +
-      (data.steps_taken?`<span style="margin-left:7px;font-size:10px;color:var(--dim);">${data.steps_taken} step(s)</span>`:'');
+    s.innerHTML = `<span style="background:${ok?'var(--green-dim)':'var(--red-dim)'};color:${ok?'var(--green)':'var(--red)'};padding:2px 9px;border-radius:9px;font-size:var(--sz-chip);font-weight:700;font-family:var(--font-mono);text-transform:uppercase;">${data.status??'unknown'}</span>` +
+      (data.steps_taken ? `<span style="margin-left:7px;font-size:var(--sz-chip);color:var(--dim);">${data.steps_taken} step(s)</span>` : '');
     s.style.display = 'block';
     const out = document.getElementById('t3-out');
     out.textContent = data.result ?? JSON.stringify(data, null, 2);
@@ -630,16 +1090,16 @@ async function runAgent() {
     if (Array.isArray(data.logs) && data.logs.length) {
       document.getElementById('t3-logs-body').innerHTML = data.logs.map(l => `
         <tr style="border-bottom:1px solid var(--border);">
-          <td style="padding:4px 7px;color:var(--muted);">${l.step??''}</td>
-          <td style="padding:4px 7px;color:var(--purple);">${l.action??''}</td>
-          <td style="padding:4px 7px;color:var(--muted);max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${JSON.stringify(l.input??'')}</td>
-          <td style="padding:4px 7px;color:var(--muted);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${String(l.output??'').slice(0,90)}</td>
+          <td style="padding:3px 6px;color:var(--muted);">${l.step??''}</td>
+          <td style="padding:3px 6px;color:var(--purple);">${l.action??''}</td>
+          <td style="padding:3px 6px;color:var(--muted);max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${JSON.stringify(l.input??'')}</td>
+          <td style="padding:3px 6px;color:var(--muted);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${String(l.output??'').slice(0,90)}</td>
         </tr>`).join('');
       document.getElementById('t3-logs-wrap').style.display = 'block';
     }
   } catch (e) {
     const s = document.getElementById('t3-status');
-    s.innerHTML = '<span style="background:var(--red-dim);color:var(--red);padding:2px 9px;border-radius:9px;font-size:10px;font-weight:700;font-family:\'JetBrains Mono\',monospace;">FETCH ERROR</span>';
+    s.innerHTML = '<span style="background:var(--red-dim);color:var(--red);padding:2px 9px;border-radius:9px;font-size:var(--sz-chip);font-weight:700;font-family:var(--font-mono);">FETCH ERROR</span>';
     s.style.display = 'block';
     err('t3-out', e.message + '\n(Check CORS)');
   }
