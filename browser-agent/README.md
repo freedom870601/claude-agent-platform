@@ -106,6 +106,16 @@ Response:
    - `LITELLM_MODEL` — model name (default: `claude-cli`)
 4. Zeabur auto-detects Dockerfile and deploys
 
+## Bot Detection Evasion
+
+The agent uses [`playwright-stealth`](https://github.com/AtuboDad/playwright_stealth) to avoid being blocked by sites that detect headless browsers:
+
+- **JS fingerprint patching** — `Stealth().use_async(page)` patches `navigator.webdriver`, WebGL vendor/renderer, plugin lists, and other JS properties that reveal headless Chrome
+- **Real User-Agent** — uses a macOS Chrome 120 User-Agent string instead of the default headless one
+- **Headless mode retained** — stealth patches work with `headless=True`, so deployment compatibility is unchanged
+
+This significantly improves success rates on DuckDuckGo, ESPN, and other bot-aware sites.
+
 ## Key Assumptions
 
 - Uses DuckDuckGo HTML endpoint for search (no API key required)
